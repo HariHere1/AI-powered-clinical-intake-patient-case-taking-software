@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Noto+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Sans+Tamil:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Sans+Kannada:wght@400;600&family=Noto+Sans+Malayalam:wght@400;600&display=swap');
+@import 'tailwindcss';
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── Design Tokens ─────────────────────────────────────────────────── */
+:root {
+  --mk-bg: #F4EFE6;
+  --mk-card: #FDFAF4;
+  --mk-fg: #1A1714;
+  --mk-fg-secondary: #4A413A;
+  --mk-primary: #1A5F75;
+  --mk-primary-hover: #134B5D;
+  --mk-primary-fg: #FFFFFF;
+  --mk-accent: #B5601F;
+  --mk-accent-hover: #8F4C17;
+  --mk-accent-fg: #FFFFFF;
+  --mk-sand: #EAE0D2;
+  --mk-sand-hover: #DDD1BF;
+  --mk-muted: #6E6058;
+  --mk-border: #CFC5B5;
+  --mk-border-strong: #AFA298;
+  --mk-success: #1A6940;
+  --mk-success-bg: #EDF7F1;
+  --mk-emergency: #9B1B1B;
+  --mk-emergency-bg: #FEF2F2;
+  --mk-emergency-border: #FECACA;
+  --mk-warn: #854D0E;
+  --mk-warn-bg: #FFFBEB;
+  --mk-warn-border: #FDE68A;
+  --font-display: 'Outfit', 'Noto Sans', sans-serif;
+  --font-body: 'Noto Sans', 'Noto Sans Devanagari', sans-serif;
+}
+
+/* High-contrast mode */
+.hc-mode {
+  --mk-bg: #0E0C0A;
+  --mk-card: #1C1914;
+  --mk-fg: #F5F2EE;
+  --mk-fg-secondary: #C8BFB5;
+  --mk-primary: #3EC9A7;
+  --mk-primary-hover: #2EA88A;
+  --mk-primary-fg: #0E0C0A;
+  --mk-accent: #F4A44A;
+  --mk-accent-hover: #E89030;
+  --mk-accent-fg: #0E0C0A;
+  --mk-sand: #2A2520;
+  --mk-sand-hover: #342E27;
+  --mk-muted: #A09488;
+  --mk-border: #4A4238;
+  --mk-border-strong: #6A5E52;
+  --mk-success: #4ADE80;
+  --mk-success-bg: #052E16;
+  --mk-emergency: #F87171;
+  --mk-emergency-bg: #1C0A0A;
+  --mk-emergency-border: #7F1D1D;
+  --mk-warn: #FCD34D;
+  --mk-warn-bg: #1C1400;
+  --mk-warn-border: #78350F;
+}
+
+/* Large-text modifier: applied to root, cascades via rem */
+.large-text { font-size: 118.75%; }
+
+/* ─── Semantic helpers ──────────────────────────────────────────────── */
+.mk-bg           { background-color: var(--mk-bg); }
+.mk-card-bg      { background-color: var(--mk-card); }
+.mk-fg           { color: var(--mk-fg); }
+.mk-fg-sec       { color: var(--mk-fg-secondary); }
+.mk-primary-bg   { background-color: var(--mk-primary); color: var(--mk-primary-fg); }
+.mk-primary-fg   { color: var(--mk-primary); }
+.mk-primary-border { border-color: var(--mk-primary); }
+.mk-accent-bg    { background-color: var(--mk-accent); color: var(--mk-accent-fg); }
+.mk-accent-fg    { color: var(--mk-accent); }
+.mk-sand-bg      { background-color: var(--mk-sand); }
+.mk-border       { border-color: var(--mk-border); }
+.mk-border-strong { border-color: var(--mk-border-strong); }
+.mk-muted        { color: var(--mk-muted); }
+
+/* ─── Typography scale ──────────────────────────────────────────────── */
+.font-display    { font-family: var(--font-display); }
+.font-body       { font-family: var(--font-body); }
+
+/* ─── Waveform bars ─────────────────────────────────────────────────── */
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.25); }
+  50%       { transform: scaleY(1); }
+}
+
+.wave-bar {
+  width: 6px;
+  border-radius: 3px;
+  background-color: var(--mk-primary-fg);
+  height: 40px;
+  transform-origin: center bottom;
+  animation: waveBar 0.9s ease-in-out infinite;
+}
+.wave-bar:nth-child(1) { animation-delay: 0.00s; }
+.wave-bar:nth-child(2) { animation-delay: 0.13s; }
+.wave-bar:nth-child(3) { animation-delay: 0.26s; }
+.wave-bar:nth-child(4) { animation-delay: 0.39s; }
+.wave-bar:nth-child(5) { animation-delay: 0.52s; }
+.wave-bar:nth-child(6) { animation-delay: 0.39s; }
+.wave-bar:nth-child(7) { animation-delay: 0.26s; }
+
+/* ─── Mic pulse ring ────────────────────────────────────────────────── */
+@keyframes ringPulse {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+.mic-ring {
+  animation: ringPulse 1.4s ease-out infinite;
+}
+.mic-ring-2 {
+  animation: ringPulse 1.4s ease-out 0.5s infinite;
+}
+
+/* ─── Transitions ───────────────────────────────────────────────────── */
+.mk-transition { transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+
+/* ─── Scrollbar hide ────────────────────────────────────────────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Emergency pulse border ────────────────────────────────────────── */
+@keyframes emergencyPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(155, 27, 27, 0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(155, 27, 27, 0); }
+}
+.emergency-border {
+  animation: emergencyPulse 2s ease-in-out infinite;
+}
+
+/* ─── Spinner ───────────────────────────────────────────────────────── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Screen slide transitions ──────────────────────────────────────── */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.screen-enter { animation: slideIn 0.35s ease-out both; }
