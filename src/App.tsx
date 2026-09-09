@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { AppProvider, useApp } from "./context/AppContext";
+import type { Screen } from "./context/AppContext";
 import AccessibilityBar from "./components/AccessibilityBar";
 import EntryScreen from "./screens/EntryScreen";
 import LanguageSelect from "./screens/LanguageSelect";
@@ -7,6 +8,76 @@ import ConsentScreen from "./screens/ConsentScreen";
 import ConverseScreen from "./screens/ConverseScreen";
 import DocumentScan from "./screens/DocumentScan";
 import SummaryScreen from "./screens/SummaryScreen";
+
+const workflowSteps: { screen: Exclude<Screen, "entry">; label: string }[] = [
+  { screen: "language", label: "Language" },
+  { screen: "consent", label: "Consent" },
+  { screen: "converse", label: "Interview" },
+  { screen: "scan", label: "Documents" },
+  { screen: "summary", label: "Review & Submit" },
+];
+
+const screenContent: Record<Screen, ReactNode> = {
+  entry: <EntryScreen />,
+  language: <LanguageSelect />,
+  consent: <ConsentScreen />,
+  converse: <ConverseScreen />,
+  scan: <DocumentScan />,
+  summary: <SummaryScreen />,
+};
+
+function StepIndicator({ currentScreen }: { currentScreen: Exclude<Screen, "entry"> }) {
+  const currentIndex = workflowSteps.findIndex(({ screen }) => screen === currentScreen);
+
+  return (
+    <div
+      className="flex items-center justify-center gap-2 shrink-0 py-2"
+      style={{ borderBottom: "1px solid var(--mk-border)" }}
+    >
+      {workflowSteps.map(({ screen: step, label }, index) => {
+        const isCurrent = step === currentScreen;
+        const isComplete = index < currentIndex;
+
+        return (
+          <div key={step} className="flex items-center gap-2">
+            {index > 0 && (
+              <div
+                className="mk-transition"
+                style={{
+                  width: 20,
+                  height: 2,
+                  borderRadius: 1,
+                  backgroundColor: isComplete ? "var(--mk-primary)" : "var(--mk-border)",
+                }}
+              />
+            )}
+            <div
+              className="rounded-full mk-transition"
+              style={{
+                width: isCurrent ? 10 : 8,
+                height: isCurrent ? 10 : 8,
+                backgroundColor: isCurrent || isComplete ? "var(--mk-primary)" : "var(--mk-border)",
+                opacity: isComplete ? 0.5 : 1,
+              }}
+            />
+          </div>
+        );
+      })}
+      <span
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "0.68rem",
+          color: "var(--mk-muted)",
+          fontWeight: 500,
+          marginLeft: 10,
+          letterSpacing: "0.02em",
+        }}
+      >
+        {workflowSteps[currentIndex].label}
+      </span>
+    </div>
+  );
+}
 
 function KioskShell() {
   const { screen, hcMode, largeText } = useApp();
@@ -16,15 +87,6 @@ function KioskShell() {
     root.classList.toggle("hc-mode", hcMode);
     root.classList.toggle("large-text", largeText);
   }, [hcMode, largeText]);
-
-  const screens: Record<typeof screen, React.ReactNode> = {
-    entry:    <EntryScreen />,
-    language: <LanguageSelect />,
-    consent:  <ConsentScreen />,
-    converse: <ConverseScreen />,
-    scan:     <DocumentScan />,
-    summary:  <SummaryScreen />,
-  };
 
   return (
     <div
@@ -39,47 +101,11 @@ function KioskShell() {
     >
       <AccessibilityBar />
 
-      {/* Step indicator — hidden on entry screen */}
-      {screen !== "entry" && (
-        <div
-          className="flex items-center justify-center gap-2 shrink-0 py-2"
-          style={{ borderBottom: "1px solid var(--mk-border)" }}
-        >
-          {(["language", "consent", "converse", "scan", "summary"] as const).map((s, i) => {
-            const isCurrent = s === screen;
-            const stepIdx = ["language", "consent", "converse", "scan", "summary"].indexOf(screen);
-            const isComplete = i < stepIdx;
-            return (
-              <div key={s} className="flex items-center gap-2">
-                {i > 0 && (
-                  <div
-                    className="mk-transition"
-                    style={{ width: 20, height: 2, borderRadius: 1, backgroundColor: isComplete ? "var(--mk-primary)" : "var(--mk-border)" }}
-                  />
-                )}
-                <div
-                  className="rounded-full mk-transition"
-                  style={{
-                    width: isCurrent ? 10 : 8,
-                    height: isCurrent ? 10 : 8,
-                    backgroundColor: isCurrent ? "var(--mk-primary)" : isComplete ? "var(--mk-primary)" : "var(--mk-border)",
-                    opacity: isComplete ? 0.5 : 1,
-                  }}
-                />
-              </div>
-            );
-          })}
-          <span
-            style={{ fontFamily: "var(--font-display)", fontSize: "0.68rem", color: "var(--mk-muted)", fontWeight: 500, marginLeft: 10, letterSpacing: "0.02em" }}
-          >
-            {screen === "language" ? "Language" : screen === "consent" ? "Consent" : screen === "converse" ? "Interview" : screen === "scan" ? "Documents" : "Review & Submit"}
-          </span>
-        </div>
-      )}
+      {screen !== "entry" && <StepIndicator currentScreen={screen} />}
 
       {/* Screen content */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        {screens[screen]}
+        {screenContent[screen]}
       </div>
     </div>
   );
