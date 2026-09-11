@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 
 type PatientMode = "home" | "abha" | "otp" | "walkin-confirm";
-type StaffMode = "hidden" | "form";
-
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function maskId(id: string) {
@@ -470,9 +468,9 @@ function PatientPanel({ onCheckedIn }: { onCheckedIn: () => void }) {
 
 // ─── Staff login panel ───────────────────────────────────────────────────────
 
-function StaffPanel() {
+export function StaffPanel({ dedicated = false }: { dedicated?: boolean }) {
   const { navigateTo } = useApp();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(dedicated);
   const [staffId, setStaffId] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -490,7 +488,7 @@ function StaffPanel() {
     }, 1200);
   }
 
-  if (!open) {
+  if (!open && !dedicated) {
     return (
       <button
         onClick={() => setOpen(true)}
@@ -539,7 +537,17 @@ function StaffPanel() {
           </span>
         </div>
         <button
-          onClick={() => { setOpen(false); setError(""); setStaffId(""); setPassword(""); }}
+          onClick={() => {
+            if (dedicated) {
+              navigateTo("entry");
+            } else {
+              setOpen(false);
+              setError("");
+              setStaffId("");
+              setPassword("");
+            }
+          }}
+          aria-label={dedicated ? "Back to patient check-in" : "Close staff login"}
           style={{ background: "none", border: "none", color: "var(--mk-muted)", cursor: "pointer", padding: 4 }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -786,7 +794,27 @@ export default function EntryScreen() {
 
           {/* Staff login — visually subdued, below the fold of attention */}
           <div className="flex flex-col items-start gap-2">
-            <StaffPanel />
+            <button
+              onClick={() => navigateTo("staff")}
+              className="flex items-center gap-2 mk-transition"
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--mk-muted)",
+                fontFamily: "var(--font-display)",
+                fontSize: "0.8rem",
+                fontWeight: 500,
+                cursor: "pointer",
+                padding: "8px 12px",
+                borderRadius: 8,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Staff / Physician login
+            </button>
           </div>
 
           {/* Footer */}

@@ -1,5 +1,6 @@
 import { useApp } from "../context/AppContext";
 import { useTTS } from "../hooks/useTTS";
+import ScreenBackButton from "../components/ScreenBackButton";
 
 const CONSENT_POINTS = [
   {
@@ -88,6 +89,9 @@ export default function ConsentScreen() {
         className="flex flex-col mx-auto w-full px-6 py-8"
         style={{ maxWidth: 720 }}
       >
+        <div style={{ marginBottom: 24 }}>
+          <ScreenBackButton to="language" label="Back to language" />
+        </div>
         {/* Title row */}
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
