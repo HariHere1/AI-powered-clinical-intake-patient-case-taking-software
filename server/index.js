@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { synthesizeSpeech } from "./bhashiniClient.js";
+import { synthesizeSpeech } from "./indicParlerClient.js";
 
 const app = express();
 app.use(cors());

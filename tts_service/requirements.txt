@@ -1,0 +1,23 @@
+# Indic Parler-TTS local inference service.
+#
+# torch/parler-tts wheels may lag behind the newest Python releases — if
+# install fails on your default `python`, create a venv with Python
+# 3.10-3.12 specifically for this service:
+#   py -3.12 -m venv tts_service/.venv
+#   tts_service/.venv/Scripts/activate
+#   pip install -r tts_service/requirements.txt
+#
+# CPU-only install shown below. For GPU acceleration (NVIDIA), install a
+# CUDA build of torch FIRST, before installing the rest of this file, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu130
+# Pick the CUDA tag matching your driver (see https://pytorch.org/get-started/locally/).
+# app.py auto-detects CUDA at startup — no code change needed either way.
+
+torch
+git+https://github.com/huggingface/parler-tts.git
+transformers>=4.46.0
+soundfile
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv

@@ -1,16 +1,12 @@
 // Text-to-speech service. Primary path calls the MediKiosk backend, which
-// synthesizes speech via Bhashini's Indian-language neural TTS models.
-// Falls back to the browser's built-in speechSynthesis when the backend is
-// unreachable or a language isn't covered, so the kiosk always speaks.
+// synthesizes speech via a self-hosted Indic Parler-TTS model (see
+// server/tts_python/). Falls back to the browser's built-in speechSynthesis
+// when the backend is unreachable or a language isn't covered, so the
+// kiosk always speaks.
 
 export interface SpeakOptions {
   gender?: "male" | "female";
 }
-
-// App language codes that differ from Bhashini's ISO codes.
-const BHASHINI_LANG_MAP: Record<string, string> = {
-  od: "or", // Odia
-};
 
 // BCP-47 tags for the browser SpeechSynthesis fallback.
 const BCP47_MAP: Record<string, string> = {
@@ -28,22 +24,37 @@ const BCP47_MAP: Record<string, string> = {
   ur: "ur-IN",
 };
 
-function toBhashiniCode(code: string): string {
-  return BHASHINI_LANG_MAP[code] || code;
-}
-
 function toBcp47(code: string): string {
   return BCP47_MAP[code] || "en-IN";
 }
 
 let currentAudio: HTMLAudioElement | null = null;
 
-async function speakViaBhashini(text: string, languageCode: string, gender: string): Promise<void> {
-  const res = await fetch("/api/tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, languageCode: toBhashiniCode(languageCode), gender }),
-  });
+// Bounds how long we wait on the backend before falling back to the
+// browser's speechSynthesis — without this, a cold-starting or overloaded
+// TTS service leaves the page looking stuck with no feedback.
+const BACKEND_TIMEOUT_MS = 8000;
+
+async function speakViaBackend(text: string, languageCode: string, gender: string): Promise<void> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, languageCode, gender }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(`TTS backend timed out after ${BACKEND_TIMEOUT_MS}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -84,13 +95,13 @@ function speakViaBrowser(text: string, languageCode: string): Promise<void> {
   });
 }
 
-/** Speaks `text` in the given app language code, preferring Bhashini TTS. */
+/** Speaks `text` in the given app language code, preferring the backend TTS service. */
 export async function speak(text: string, languageCode: string, opts: SpeakOptions = {}): Promise<void> {
   if (!text?.trim()) return;
   try {
-    await speakViaBhashini(text, languageCode, opts.gender || "female");
+    await speakViaBackend(text, languageCode, opts.gender || "female");
   } catch (err) {
-    console.warn("Bhashini TTS unavailable, falling back to browser speech synthesis:", err);
+    console.warn("Backend TTS unavailable, falling back to browser speech synthesis:", err);
     await speakViaBrowser(text, languageCode);
   }
 }

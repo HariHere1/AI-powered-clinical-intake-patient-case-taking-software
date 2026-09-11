@@ -1,0 +1,187 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1020" viewBox="0 0 1600 1020" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5E6E75"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2E7D60"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="1020" fill="#ffffff"/>
+
+  <!-- Header -->
+  <text x="40" y="38" font-size="26" font-weight="700" fill="#1A2A2E">MediKiosk — System Architecture (SIH26047)</text>
+  <text x="40" y="60" font-size="14" fill="#5E6E75">AI-powered clinical history kiosk — solid green = implemented today, dashed gray = planned per problem statement (not yet built)</text>
+
+  <!-- Legend -->
+  <rect x="1230" y="16" width="16" height="16" rx="3" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+  <text x="1252" y="29" font-size="13" fill="#1A2A2E">Implemented</text>
+  <rect x="1230" y="40" width="16" height="16" rx="3" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="1252" y="53" font-size="13" fill="#1A2A2E">Planned (spec)</text>
+
+  <!-- ============ SECTION 1: Patient Kiosk ============ -->
+  <rect x="30" y="82" width="1540" height="250" rx="14" fill="#FAFBFB" stroke="#B8C2C6" stroke-width="1.5"/>
+  <text x="50" y="106" font-size="15" font-weight="700" fill="#1A5F75">PATIENT KIOSK — React 19 + Vite + TypeScript (browser)</text>
+
+  <!-- Screen boxes -->
+  <g font-size="12.5">
+    <!-- Entry -->
+    <rect x="55" y="122" width="205" height="60" rx="10" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+    <text x="157" y="146" text-anchor="middle" font-weight="600" fill="#1A2A2E">EntryScreen</text>
+    <text x="157" y="163" text-anchor="middle" fill="#5E6E75">ABHA/Aadhaar or walk-in</text>
+
+    <!-- LanguageSelect -->
+    <rect x="295" y="122" width="205" height="60" rx="10" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+    <text x="397" y="146" text-anchor="middle" font-weight="600" fill="#1A2A2E">LanguageSelect</text>
+    <text x="397" y="163" text-anchor="middle" fill="#5E6E75">12 Indian languages</text>
+
+    <!-- Consent -->
+    <rect x="535" y="122" width="205" height="60" rx="10" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+    <text x="637" y="146" text-anchor="middle" font-weight="600" fill="#1A2A2E">ConsentScreen</text>
+    <text x="637" y="163" text-anchor="middle" fill="#5E6E75">DPDP 2023 · "Listen" TTS</text>
+
+    <!-- Converse -->
+    <rect x="775" y="122" width="205" height="60" rx="10" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+    <text x="877" y="146" text-anchor="middle" font-weight="600" fill="#1A2A2E">ConverseScreen</text>
+    <text x="877" y="163" text-anchor="middle" fill="#5E6E75">Q&amp;A + mic (stub) + TTS</text>
+
+    <!-- DocumentScan -->
+    <rect x="1015" y="122" width="205" height="60" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="1117" y="146" text-anchor="middle" font-weight="600" fill="#1A2A2E">DocumentScan</text>
+    <text x="1117" y="163" text-anchor="middle" fill="#5E6E75">upload UI (OCR planned)</text>
+
+    <!-- Summary -->
+    <rect x="1255" y="122" width="205" height="60" rx="10" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+    <text x="1357" y="146" text-anchor="middle" font-weight="600" fill="#1A2A2E">SummaryScreen</text>
+    <text x="1357" y="163" text-anchor="middle" fill="#5E6E75">review + bilingual TTS</text>
+  </g>
+
+  <!-- flow arrows between screens -->
+  <g stroke="#5E6E75" stroke-width="1.75" fill="none" marker-end="url(#arrow)">
+    <path d="M260,152 L293,152"/>
+    <path d="M500,152 L533,152"/>
+    <path d="M740,152 L773,152"/>
+    <path d="M980,152 L1013,152"/>
+    <path d="M1220,152 L1253,152"/>
+  </g>
+
+  <!-- AppContext shared state -->
+  <rect x="55" y="210" width="1405" height="46" rx="10" fill="#EFEAF6" stroke="#7B5EA7" stroke-width="1.5"/>
+  <text x="757" y="238" text-anchor="middle" font-size="13" font-weight="600" fill="#4A3A66">AppContext (React state) — screen, language, responses[], emergencyFlag, consentGiven, hcMode/largeText</text>
+
+  <!-- vertical connectors screens -> context -->
+  <g stroke="#9AA5AA" stroke-width="1.25" fill="none">
+    <path d="M157,182 L157,210"/>
+    <path d="M397,182 L397,210"/>
+    <path d="M637,182 L637,210"/>
+    <path d="M877,182 L877,210"/>
+    <path d="M1117,182 L1117,210"/>
+    <path d="M1357,182 L1357,210"/>
+  </g>
+
+  <!-- useTTS hook note -->
+  <text x="55" y="278" font-size="12.5" fill="#2E7D60" font-weight="600">useTTS() hook (src/hooks/useTTS.ts) — used by Consent, Converse, Summary screens</text>
+  <text x="55" y="296" font-size="12" fill="#5E6E75">calls speak(text, languageCode) in src/services/ttsService.ts → tries backend first, falls back to browser speech synthesis on failure</text>
+
+  <!-- arrow: kiosk section down to backend (implemented, tts) -->
+  <path d="M637,256 L637,316 L45,316 L45,336" stroke="#2E7D60" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+  <text x="55" y="330" font-size="12" fill="#2E7D60" font-weight="600">fetch POST /api/tts</text>
+
+  <!-- direct fallback arrow: kiosk -> browser speechSynthesis (bypasses backend) -->
+  <path d="M877,256 L877,316 L1555,316 L1555,860 L1545,860" stroke="#9AA5AA" stroke-width="1.75" stroke-dasharray="5,4" fill="none" marker-end="url(#arrow)"/>
+  <text x="1170" y="330" font-size="12" fill="#5E6E75">fallback: window.speechSynthesis (client-side, no network)</text>
+
+  <!-- ============ SECTION 2: Backend ============ -->
+  <rect x="30" y="352" width="1540" height="180" rx="14" fill="#FAFBFB" stroke="#B8C2C6" stroke-width="1.5"/>
+  <text x="50" y="376" font-size="15" font-weight="700" fill="#1A5F75">BACKEND — Express (server/), Node 22, proxied at /api via Vite dev server</text>
+
+  <g font-size="12.5">
+    <rect x="55" y="392" width="270" height="100" rx="10" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+    <text x="190" y="418" text-anchor="middle" font-weight="700" fill="#1A2A2E">POST /api/tts</text>
+    <text x="190" y="436" text-anchor="middle" fill="#5E6E75">server/bhashiniClient.js</text>
+    <text x="190" y="452" text-anchor="middle" fill="#5E6E75">caches ULCA pipeline config</text>
+    <text x="190" y="468" text-anchor="middle" fill="#5E6E75">(1hr TTL), calls inference</text>
+
+    <rect x="360" y="392" width="270" height="100" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="495" y="418" text-anchor="middle" font-weight="700" fill="#1A2A2E">/api/asr (planned)</text>
+    <text x="495" y="436" text-anchor="middle" fill="#5E6E75">Module A: adaptive voice</text>
+    <text x="495" y="452" text-anchor="middle" fill="#5E6E75">interview, SOCRATES probing,</text>
+    <text x="495" y="468" text-anchor="middle" fill="#5E6E75">red-flag detection</text>
+
+    <rect x="665" y="392" width="270" height="100" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="800" y="418" text-anchor="middle" font-weight="700" fill="#1A2A2E">/api/ocr (planned)</text>
+    <text x="800" y="436" text-anchor="middle" fill="#5E6E75">Module B: prescription/lab</text>
+    <text x="800" y="452" text-anchor="middle" fill="#5E6E75">OCR, entity extraction,</text>
+    <text x="800" y="468" text-anchor="middle" fill="#5E6E75">chronological timeline</text>
+
+    <rect x="970" y="392" width="270" height="100" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="1105" y="418" text-anchor="middle" font-weight="700" fill="#1A2A2E">/api/summarize (planned)</text>
+    <text x="1105" y="436" text-anchor="middle" fill="#5E6E75">Module C: structured</text>
+    <text x="1105" y="452" text-anchor="middle" fill="#5E6E75">history summary generator,</text>
+    <text x="1105" y="468" text-anchor="middle" fill="#5E6E75">physician-editable draft</text>
+
+    <rect x="1275" y="392" width="270" height="100" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="1410" y="418" text-anchor="middle" font-weight="700" fill="#1A2A2E">/api/abdm (planned)</text>
+    <text x="1410" y="436" text-anchor="middle" fill="#5E6E75">Module D: consent ledger,</text>
+    <text x="1410" y="452" text-anchor="middle" fill="#5E6E75">ABHA auth, push to HIS/EMR</text>
+    <text x="1410" y="468" text-anchor="middle" fill="#5E6E75">via FHIR APIs</text>
+  </g>
+
+  <!-- backend -> external arrows -->
+  <path d="M190,492 L190,548" stroke="#2E7D60" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+  <path d="M495,492 L495,548" stroke="#9AA5AA" stroke-width="1.75" stroke-dasharray="5,4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M800,492 L800,548" stroke="#9AA5AA" stroke-width="1.75" stroke-dasharray="5,4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1105,492 L1105,548" stroke="#9AA5AA" stroke-width="1.75" stroke-dasharray="5,4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1410,492 L1410,548" stroke="#9AA5AA" stroke-width="1.75" stroke-dasharray="5,4" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- ============ SECTION 3: External services ============ -->
+  <rect x="30" y="562" width="1540" height="320" rx="14" fill="#FAFBFB" stroke="#B8C2C6" stroke-width="1.5"/>
+  <text x="50" y="586" font-size="15" font-weight="700" fill="#1A5F75">EXTERNAL SERVICES / ENABLING TECH (per problem statement §1.3)</text>
+
+  <g font-size="12.5">
+    <rect x="55" y="602" width="270" height="90" rx="10" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+    <text x="190" y="626" text-anchor="middle" font-weight="700" fill="#1A2A2E">Bhashini ULCA TTS</text>
+    <text x="190" y="644" text-anchor="middle" fill="#5E6E75">bhashini.gov.in (MeitY)</text>
+    <text x="190" y="660" text-anchor="middle" fill="#5E6E75">needs BHASHINI_USER_ID /</text>
+    <text x="190" y="676" text-anchor="middle" fill="#5E6E75">BHASHINI_ULCA_API_KEY</text>
+
+    <rect x="360" y="602" width="270" height="90" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="495" y="626" text-anchor="middle" font-weight="700" fill="#1A2A2E">Bhashini ASR + NMT</text>
+    <text x="495" y="644" text-anchor="middle" fill="#5E6E75">(planned)</text>
+    <text x="495" y="660" text-anchor="middle" fill="#5E6E75">AI4Bharat models for Indian</text>
+    <text x="495" y="676" text-anchor="middle" fill="#5E6E75">languages/accents</text>
+
+    <rect x="665" y="602" width="270" height="90" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="800" y="626" text-anchor="middle" font-weight="700" fill="#1A2A2E">OCR / Document-AI</text>
+    <text x="800" y="644" text-anchor="middle" fill="#5E6E75">(planned)</text>
+    <text x="800" y="660" text-anchor="middle" fill="#5E6E75">handwritten + printed,</text>
+    <text x="800" y="676" text-anchor="middle" fill="#5E6E75">multilingual medical docs</text>
+
+    <rect x="970" y="602" width="270" height="90" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="1105" y="626" text-anchor="middle" font-weight="700" fill="#1A2A2E">LLM Summarizer</text>
+    <text x="1105" y="644" text-anchor="middle" fill="#5E6E75">(planned)</text>
+    <text x="1105" y="660" text-anchor="middle" fill="#5E6E75">clinical-history ontology-</text>
+    <text x="1105" y="676" text-anchor="middle" fill="#5E6E75">constrained summarization</text>
+
+    <rect x="1275" y="602" width="270" height="90" rx="10" fill="#F3F4F5" stroke="#9AA5AA" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="1410" y="626" text-anchor="middle" font-weight="700" fill="#1A2A2E">ABDM / HIS (FHIR)</text>
+    <text x="1410" y="644" text-anchor="middle" fill="#5E6E75">(planned)</text>
+    <text x="1410" y="660" text-anchor="middle" fill="#5E6E75">ABHA ID, Health Information</text>
+    <text x="1410" y="676" text-anchor="middle" fill="#5E6E75">Exchange, hospital EMR</text>
+
+    <!-- browser fallback box -->
+    <rect x="1335" y="740" width="205" height="90" rx="10" fill="#E8F5E9" stroke="#2E7D60" stroke-width="1.5"/>
+    <text x="1437" y="764" text-anchor="middle" font-weight="700" fill="#1A2A2E">Browser</text>
+    <text x="1437" y="781" text-anchor="middle" font-weight="700" fill="#1A2A2E">SpeechSynthesis</text>
+    <text x="1437" y="800" text-anchor="middle" fill="#5E6E75">client-side TTS fallback,</text>
+    <text x="1437" y="816" text-anchor="middle" fill="#5E6E75">no network round-trip</text>
+  </g>
+
+  <!-- Data/security note -->
+  <rect x="55" y="900" width="1490" height="90" rx="12" fill="#FFF8ED" stroke="#B5601F" stroke-width="1.5"/>
+  <text x="75" y="925" font-size="13.5" font-weight="700" fill="#8A4A15">Module D — Consent, Privacy &amp; DPDP 2023 (planned, not yet built)</text>
+  <text x="75" y="946" font-size="12.5" fill="#6B4423">ABHA-based auth · granular revocable consent · session data cleared after submission · audio-guided consent for low-literacy users.</text>
+  <text x="75" y="964" font-size="12.5" fill="#6B4423">Today: ConsentScreen collects UI-level consent only (data.consentGiven in AppContext) — no server-side persistence, encryption-at-rest, or ABDM linkage implemented yet.</text>
+  <text x="75" y="982" font-size="12" fill="#9AA5AA" font-style="italic">Source: SIH26047 problem statement, "MediKiosk" — AIIA, Ministry of Ayush.</text>
+</svg>
