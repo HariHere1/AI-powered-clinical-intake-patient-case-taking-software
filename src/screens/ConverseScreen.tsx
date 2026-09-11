@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
+import { useTTS } from "../hooks/useTTS";
 
 const SECTIONS = [
   { id: "complaint", label: "Chief Complaint", shortLabel: "Complaint", color: "var(--mk-primary)" },
@@ -76,6 +77,7 @@ type MicState = "idle" | "listening" | "processing";
 
 export default function ConverseScreen() {
   const { navigateTo, addResponse, setEmergency, data } = useApp();
+  const { speak, stop, isSpeaking } = useTTS();
 
   const [sectionIdx, setSectionIdx] = useState(0);
   const [questionIdx, setQuestionIdx] = useState(0);
@@ -90,6 +92,14 @@ export default function ConverseScreen() {
   const totalQ = Object.values(QUESTIONS).flat().length;
   const answeredQ = SECTIONS.slice(0, sectionIdx).reduce((a, s) => a + QUESTIONS[s.id].length, 0) + questionIdx;
   const progress = totalQ > 0 ? answeredQ / totalQ : 0;
+
+  // Read each question aloud as it appears — kiosk users may be low-literacy
+  // or elderly and need zero-training audio guidance.
+  useEffect(() => {
+    speak(question.q);
+    return () => stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section.id, questionIdx]);
 
   function handleOptionSelect(opt: string) {
     setSelectedOption(opt);
@@ -252,18 +262,45 @@ export default function ConverseScreen() {
             border: "1.5px solid var(--mk-border)",
           }}
         >
-          <h2
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(1.2rem, 2.8vw, 1.5rem)",
-              fontWeight: 700,
-              color: "var(--mk-fg)",
-              lineHeight: 1.3,
-              marginBottom: "1.25rem",
-            }}
-          >
-            {question.q}
-          </h2>
+          <div className="flex items-start justify-between gap-3" style={{ marginBottom: "1.25rem" }}>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(1.2rem, 2.8vw, 1.5rem)",
+                fontWeight: 700,
+                color: "var(--mk-fg)",
+                lineHeight: 1.3,
+              }}
+            >
+              {question.q}
+            </h2>
+            <button
+              onClick={() => (isSpeaking ? stop() : speak(question.q))}
+              aria-label={isSpeaking ? "Stop reading question" : "Read question aloud"}
+              className="flex items-center justify-center rounded-full shrink-0 mk-transition"
+              style={{
+                width: 44,
+                height: 44,
+                backgroundColor: isSpeaking ? "var(--mk-primary)" : "var(--mk-sand)",
+                color: isSpeaking ? "var(--mk-primary-fg)" : "var(--mk-primary)",
+                border: "2px solid var(--mk-border)",
+                cursor: "pointer",
+              }}
+            >
+              {isSpeaking ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           {/* Touch options */}
           <div className="flex flex-col gap-2.5">

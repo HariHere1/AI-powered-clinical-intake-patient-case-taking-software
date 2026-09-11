@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { useApp } from "../context/AppContext";
+import { useTTS } from "../hooks/useTTS";
 
 const CONSENT_POINTS = [
   {
@@ -50,27 +50,32 @@ const CONSENT_POINTS = [
   },
 ];
 
+const CONSENT_SPEECH_TEXT = CONSENT_POINTS.map((p) => `${p.title}. ${p.body}`).join(" ");
+
 export default function ConsentScreen() {
   const { navigateTo, setConsent, data } = useApp();
-  const [audioPlaying, setAudioPlaying] = useState(false);
+  const { speak, stop, isSpeaking } = useTTS();
 
   const lang = data.language;
+  const audioPlaying = isSpeaking;
 
   function handleAccept() {
+    stop();
     setConsent(true);
     navigateTo("converse");
   }
 
   function handleDecline() {
+    stop();
     setConsent(false);
     navigateTo("language");
   }
 
   function toggleAudio() {
-    setAudioPlaying((v) => !v);
-    // In production: play TTS audio; stub here
-    if (!audioPlaying) {
-      setTimeout(() => setAudioPlaying(false), 4000);
+    if (isSpeaking) {
+      stop();
+    } else {
+      speak(CONSENT_SPEECH_TEXT);
     }
   }
 
@@ -137,7 +142,7 @@ export default function ConsentScreen() {
           </button>
         </div>
 
-        {/* Audio progress bar */}
+        {/* Audio playing indicator */}
         {audioPlaying && (
           <div
             className="rounded-full mb-6 overflow-hidden"
@@ -146,9 +151,9 @@ export default function ConsentScreen() {
             <div
               className="h-full rounded-full"
               style={{
-                width: "60%",
+                width: "40%",
                 backgroundColor: "var(--mk-primary)",
-                animation: "audioProgress 4s linear forwards",
+                animation: "audioIndeterminate 1.2s ease-in-out infinite",
               }}
             />
           </div>
