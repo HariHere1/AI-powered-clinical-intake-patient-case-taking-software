@@ -1,10 +1,10 @@
 # MediKiosk
 
-**AI-powered clinical history intake platform for Indian hospital OPDs**
+**Multilingual clinical history intake kiosk for Indian hospital OPDs**
 
 Built for Smart India Hackathon (SIH26047) — targeting AYUSH and government health facility OPDs, where patients often face language barriers, low digital literacy, and long wait times before seeing a doctor.
 
-MediKiosk lets a patient check in, select their preferred language, give consent, and complete a structured clinical history — by **speaking naturally** or tapping options — before the doctor even calls them in. The history is compiled into a structured summary the physician reviews at a glance.
+MediKiosk lets a patient enter a kiosk flow, select their preferred language, give consent, and complete a structured clinical history by tapping options. The current prototype compiles the collected responses into an in-memory summary for review.
 
 ---
 
@@ -15,22 +15,21 @@ Government OPDs process large patient volumes with limited staff time per consul
 - Struggle with digital literacy for typed intake forms
 - Repeat their history verbally to multiple staff before reaching a doctor
 
-MediKiosk addresses this with a kiosk-based, voice-first, multilingual intake flow that produces a doctor-ready summary — reducing consultation time and improving history accuracy.
+MediKiosk addresses this with a kiosk-based, multilingual intake flow designed to reduce repetitive data collection before consultation. The current integration scope is limited to Groq for adaptive questioning and Supabase for authentication and persistence.
 
 ---
 
 ## Key Features
 
 - **Multilingual support** — 12 Indian languages (Hindi, Tamil, Telugu, Bengali, Marathi, Punjabi, Kannada, Malayalam, Gujarati, Odia, Urdu, English)
-- **Dual-mode input** — tap to select an option or speak the answer aloud
-- **Speech-to-Text** — powered by `faster-whisper`, running as a dedicated backend service
-- **AI-driven adaptive questioning** — instead of a fixed questionnaire, an LLM (via Groq) generates the next clinically relevant question based on the patient's previous answers, mimicking how a doctor actually takes history
-- **Emergency flagging** — real-time detection of red-flag symptoms (chest pain, breathing difficulty, fainting, etc.) with an on-screen alert to notify staff immediately
-- **Mobile OTP-based check-in** — patient authentication via mobile number OTP verification (Supabase Auth), with walk-in fallback for new patients
-- **Document scanning** — capture prescriptions, lab reports, and ID cards via kiosk camera
-- **Physician-ready summary** — collapsible, editable sections summarizing chief complaint, medical history, family history, review of systems, and scanned documents
-- **Accessibility** — large-text toggle for readability (high-contrast mode removed per latest design decision)
-- **Staff/physician login** — separate authenticated path for hospital staff
+- **Structured intake flow** — entry, language selection, consent, interview, document scan, and summary screens
+- **AI-driven adaptive questioning** — Groq generates the next clinically relevant question from the patient's conversation history
+- **Tap-based interview input** — the current interview flow records responses selected through the kiosk UI
+- **Emergency flagging** — clinical data includes an emergency flag for urgent symptoms detected by the intake flow
+- **Document scan screen** — a dedicated step for the document-capture workflow
+- **Physician-ready summary** — review screen for the collected language, consent, responses, and emergency status
+- **Accessibility** — large-text and high-contrast toggles are managed globally through React Context
+- **Staff path** — separate staff login screen in the kiosk flow
 
 ---
 
@@ -38,40 +37,27 @@ MediKiosk addresses this with a kiosk-based, voice-first, multilingual intake fl
 
 ```
 medikiosk/
-├── medikiosk-stt/          # Python STT backend (sibling directory, NOT nested in React app)
-│   ├── venv/
-│   ├── main.py             # FastAPI app, /transcribe endpoint
-│   └── requirements.txt
-│
-└── medikiosk-frontend/     # React + TypeScript kiosk UI
-    ├── src/
-    │   ├── components/
-    │   │   ├── AccessibilityBar.tsx
-    │   │   └── BackButton.tsx
-    │   ├── context/
-    │   │   └── AppContext.tsx      # Global state: screen routing, clinical data, accessibility
-    │   ├── screens/
-    │   │   ├── EntryScreen.tsx     # ABHA/Aadhaar OTP + walk-in + staff login
-    │   │   ├── LanguageSelect.tsx
-    │   │   ├── ConsentScreen.tsx
-    │   │   ├── ConverseScreen.tsx  # Core AI-driven interview (voice + touch)
-    │   │   ├── DocumentScan.tsx
-    │   │   └── SummaryScreen.tsx
-    │   ├── App.tsx
-    │   └── index.css
-    ├── package.json
-    └── vite.config.ts
-
-server/                      # Node/Express (or shares FastAPI) — AI interview + auth routes
-├── routes/
-│   ├── interview.js         # /api/interview/next — Groq LLM adaptive questioning
-│   └── mobileAuth.js        # /api/auth/send-otp, /api/auth/verify-otp — Supabase phone auth
-├── lib/
-│   └── supabaseClient.js    # Supabase client init (service role, backend-only)
-└── .env                     # API keys (not committed)
+├── src/                         # React + TypeScript kiosk UI
+│   ├── components/              # Shared accessibility and navigation controls
+│   ├── context/AppContext.tsx   # Screen routing, clinical data, accessibility state
+│   ├── hooks/useTTS.ts          # React hook for speech playback
+│   ├── screens/                 # Entry, consent, interview, scan, and summary views
+│   ├── services/                 # Groq and Supabase API clients
+│   ├── App.tsx                  # Kiosk shell and workflow step indicator
+│   └── index.css                # Tailwind/theme styles
+├── server/
+│   ├── routes/                   # Interview and authentication routes
+│   └── lib/                      # Server-side Supabase client
+├── index.html
+├── package.json                 # pnpm scripts and dependencies
+├── pnpm-lock.yaml
+├── .env.example                 # Groq, Supabase, and local port configuration
+├── medikiosk_supabase_schema.sql # Supabase schema for planned persistence
+├── tsconfig.json
+└── vite.config.ts               # Vite config and /api proxy to port 8787
 ```
 
-**Design principle:** STT backend and frontend are kept as **sibling directories**, never nested — avoids Python venv and Node dependency trees colliding.
+The current repository is one Node/React project. The Express service is kept in `server/` so Groq and Supabase service credentials remain server-side; the Vite development server proxies `/api` requests to it. Bhashini, STT, OCR, and other external APIs are out of scope for now.
 
 ---
 
@@ -81,26 +67,26 @@ server/                      # Node/Express (or shares FastAPI) — AI interview
 |---|---|
 | Frontend | React, TypeScript, Vite, Tailwind CSS |
 | Package manager | pnpm |
-| STT | faster-whisper, FastAPI, ffmpeg |
-| Adaptive questioning (AI) | Groq API (`llama-3.3-70b-versatile`) |
-| Patient auth | Supabase Auth (mobile number OTP) |
-| Backend-as-a-Service | Supabase (Auth + Postgres DB) |
+| Adaptive questioning | Groq API (`llama-3.3-70b-versatile`) |
+| Authentication and persistence | Supabase Auth and PostgreSQL |
+| API service | Node.js, Express, CORS, dotenv |
 | State management | React Context API (no external state library) |
+| Data model | Supabase PostgreSQL schema (`medikiosk_supabase_schema.sql`), persistence not wired yet |
 
 ---
 
 ## Core Flow
 
 ```
-Entry (check-in) → Language Select → Consent → Converse (AI interview) → Document Scan → Summary → Submit to Doctor
+Entry → Language Select → Consent → Converse → Document Scan → Summary
 ```
 
-1. **Entry** — Patient checks in via mobile number (OTP verified through Supabase Auth) or as a walk-in. Staff/physician login is a separate collapsed panel.
+1. **Entry** — Patient enters the kiosk flow, or chooses the separate staff login path.
 2. **Language Select** — Patient picks their preferred language; all subsequent screens localize accordingly.
 3. **Consent** — Patient is informed how their data is used, with audio playback and a clear decline path (falls back to paper-based intake by staff).
-4. **Converse** — The core intake interview. Sections: Chief Complaint → Medical History → Family History → Review of Systems. Questions are **not hardcoded** — each next question is generated by an LLM call based on the running conversation history, and the patient can answer by tapping an option or speaking (transcribed via the STT backend).
-5. **Document Scan** — Optional capture of prescriptions, lab reports, or ID cards.
-6. **Summary** — Collapsible sections show the compiled history; staff/patient can edit inline before final submission to the doctor.
+4. **Converse** — The interview service sends the current section and conversation history to Groq and records the returned question and patient response.
+5. **Document Scan** — Dedicated screen for the optional document-capture step; persistence/OCR integration is not implemented yet.
+6. **Summary** — Displays the data held in `AppContext` for review before the flow is completed.
 
 ---
 
@@ -108,56 +94,44 @@ Entry (check-in) → Language Select → Consent → Converse (AI interview) →
 
 ### Prerequisites
 - Node.js 18+
-- Python 3.10+
-- `ffmpeg` installed and on PATH
-- pnpm (`npm install -g pnpm` or via Corepack)
+- pnpm (`npm install --global pnpm` or via Corepack)
 - Groq API key ([console.groq.com](https://console.groq.com))
-- Supabase project with Phone Auth enabled ([supabase.com](https://supabase.com)) — requires an SMS provider (e.g. Twilio, MSG91) configured in Supabase Auth settings
+- Supabase project with Auth and PostgreSQL enabled ([supabase.com](https://supabase.com))
 
-### 1. STT Backend
-
-```powershell
-cd medikiosk-stt
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt --break-system-packages
-uvicorn main:app --reload --port 8001
-```
-
-### 2. Interview / Auth Backend
+### Install
 
 ```powershell
-cd server
+cd medikiosk
 pnpm install
 ```
 
-Create `.env`:
-```
-GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxx
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_key
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_key
-```
+Create `.env` from `.env.example` and add the Groq and Supabase credentials.
 
-Frontend also needs its own `.env` (publishable/anon key only — never the service role key):
-```
-VITE_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
-```
+### Environment variables
+
+The backend reads these values from `medikiosk/.env`:
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `GROQ_API_KEY` | Yes | Server-side Groq API key |
+  `GROQ_API_KEY2` | Yes | Server-side Groq API key for language |
+| `SUPABASE_URL` | Yes | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Client-side auth | Supabase publishable/anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side persistence | Supabase service-role key; never expose to the browser |
+| `API_PORT` | No | Express API port; defaults to `8787` |
+| `PORT` | No | Vite frontend port; defaults to `8443` |
+
+Do not commit `.env` or expose Groq or Supabase service-role credentials in frontend code. The browser calls relative `/api` routes; Vite proxies those requests to the Express service during development.
+
+### Run
+
+In one terminal, run the frontend and API together:
 
 ```powershell
-pnpm start
+pnpm run dev:all
 ```
 
-### 3. Frontend
-
-```powershell
-cd medikiosk-frontend
-pnpm install
-pnpm approve-builds    # first time only, approve pnpm's own build scripts
-pnpm dev
-```
-
-Visit `http://localhost:5173`.
+Or run them separately with `pnpm run dev` and `pnpm run server`. The frontend is available at `http://localhost:8443` and the TTS API at `http://localhost:8787`.
 
 ---
 
@@ -165,28 +139,44 @@ Visit `http://localhost:5173`.
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/transcribe` | POST | Send audio, receive text transcript (faster-whisper) |
-| `/api/interview/next` | POST | Given section + conversation history, returns next adaptive question |
-| `/api/auth/send-otp` | POST | Sends OTP to patient's mobile number via Supabase Auth |
-| `/api/auth/verify-otp` | POST | Verifies OTP, returns Supabase session (access token) for the patient |
+| `/api/interview/next` | POST | Generate the next adaptive question through Groq |
+| `/api/auth/send-otp` | POST | Send a patient OTP through Supabase Auth |
+| `/api/auth/verify-otp` | POST | Verify a patient OTP through Supabase Auth |
+
+### Supabase SQL schema
+
+The repository includes [`medikiosk_supabase_schema.sql`](medikiosk/medikiosk_supabase_schema.sql) as the database foundation for the next backend phase. It creates:
+
+- `patients` and `kiosk_sessions` for patient visits and workflow state
+- `consents`, `conversation_responses`, `documents`, and `summaries` for intake data
+- `tts_cache` for future server-side TTS caching
+- `abdm_links` and `audit_log` for planned ABDM export and compliance events
+
+Apply it to a Supabase project through the SQL Editor, or with the Supabase CLI from the repository root:
+
+```powershell
+supabase db execute -f medikiosk_supabase_schema.sql
+```
+
+The schema enables Row Level Security and creates no public policies by default. The current frontend and Express server do not yet connect to Supabase, so applying this schema alone does not persist kiosk state. Add a server-side Supabase client and authenticated service-role routes before enabling production persistence; never place a service-role key in frontend environment variables.
 
 ---
 
 ## Known Limitations (Hackathon Scope)
 
-- LLM-generated questions are **not clinically certified** — intended as a proof-of-concept for adaptive intake flow; production deployment would need clinical validation of the question-generation prompt and guardrails.
-- Mobile OTP relies on Supabase's configured SMS provider — free-tier SMS providers may have limited delivery reliability or geographic restrictions in India; verify provider coverage before demo day.
-- No ABHA/ABDM integration in current scope — patient identity is tied only to mobile number, so there's no linkage to a national health ID or existing health records.
-- OTP session handling uses Supabase Auth defaults for demo purposes — production would need additional rate-limiting and abuse protection on top of Supabase's built-in throttling.
-- Emergency detection is keyword/LLM-flag based, not a substitute for clinical triage.
+- Bhashini, STT, OCR, and other external APIs are intentionally deferred. Groq and Supabase are the only external APIs in the current integration scope.
+- Groq-generated questions are not clinically certified and require clinical validation and guardrails before production use.
+- Clinical data currently lives in React state and is lost when the page is refreshed; production use requires secure persistence and access controls.
+- Emergency status in the prototype is not a substitute for clinical triage.
 
 ---
 
 ## Team
 
-- **Speech-to-Text module** — faster-whisper + FastAPI backend
-- **OCR module** — document scanning pipeline (teammate)
-- **Text-to-Speech module** — audio playback for consent/questions (teammate)
+- **Adaptive interview module** — Groq question generation
+- **Authentication and persistence** — Supabase Auth and PostgreSQL
+- **Frontend workflow** — React kiosk screens, accessibility controls, and clinical state
+- **Future integrations** — STT, OCR, authentication, persistence, and adaptive questioning
 
 ---
 
