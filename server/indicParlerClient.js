@@ -15,7 +15,7 @@ export async function synthesizeSpeech(text, languageCode, gender = "female") {
   } catch (err) {
     throw new Error(
       `Could not reach Indic Parler-TTS service at ${SERVICE_URL}. ` +
-        `Start it with "npm run tts-service" (see tts_service/requirements.txt). ` +
+        `Start it with "pnpm run tts-service" (see tts_service/requirements.txt). ` +
         `Original error: ${err instanceof Error ? err.message : err}`,
     );
   }

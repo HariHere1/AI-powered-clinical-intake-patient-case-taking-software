@@ -19,9 +19,23 @@ if (pythonBin === "python") {
   );
 }
 
+// Redirect the HF/pip model+package caches into this project's own
+// .tool-cache/ folder instead of the user's C: profile. Set here rather
+// than relying on the OS-level env vars alone — those only apply to *new*
+// shells opened after they were configured, so a long-lived terminal (or
+// this very launcher, if invoked from one) would otherwise silently fall
+// back to downloading multiple GB to C: again.
+const toolCache = path.join(root, ".tool-cache");
+const env = {
+  ...process.env,
+  HF_HOME: path.join(toolCache, "huggingface"),
+  PIP_CACHE_DIR: path.join(toolCache, "pip"),
+};
+
 const child = spawn(pythonBin, ["-m", "uvicorn", "tts_service.app:app", "--port", "8788"], {
   cwd: root,
   stdio: "inherit",
+  env,
 });
 
 child.on("exit", (code) => process.exit(code ?? 0));

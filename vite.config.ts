@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
       host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
       port: parseInt(process.env.PORT || '8443'),
       strictPort: true,
-      watch: { ignored: ['**/.figma/**'] },
+      watch: { ignored: ['**/.figma/**', '**/tts_service/.venv/**'] },
       proxy: {
         '/api': `http://localhost:${process.env.API_PORT || '8787'}`,
       },

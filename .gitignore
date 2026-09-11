@@ -29,3 +29,8 @@ tts_service/*.log
 
 # Claude Code local tool state, not project source
 .claude/
+
+# Redirected tool caches (HF models, pip, npm, corepack, pnpm store) — moved
+# off the C: drive into this project folder to avoid filling the system
+# drive. Machine-local, huge, never commit.
+.tool-cache/

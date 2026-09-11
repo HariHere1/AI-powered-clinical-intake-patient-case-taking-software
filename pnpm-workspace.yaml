@@ -1,0 +1,2 @@
+nodeLinker: hoisted
+storeDir: .tool-cache/pnpm-store

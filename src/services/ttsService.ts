@@ -30,12 +30,31 @@ function toBcp47(code: string): string {
 
 let currentAudio: HTMLAudioElement | null = null;
 
+// Bounds how long we wait on the backend before falling back to the
+// browser's speechSynthesis — without this, a cold-starting or overloaded
+// TTS service leaves the page looking stuck with no feedback.
+const BACKEND_TIMEOUT_MS = 8000;
+
 async function speakViaBackend(text: string, languageCode: string, gender: string): Promise<void> {
-  const res = await fetch("/api/tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, languageCode, gender }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, languageCode, gender }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(`TTS backend timed out after ${BACKEND_TIMEOUT_MS}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

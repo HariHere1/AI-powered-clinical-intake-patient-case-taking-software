@@ -7,9 +7,11 @@
 #   tts_service/.venv/Scripts/activate
 #   pip install -r tts_service/requirements.txt
 #
-# CPU-only install shown below; for GPU acceleration install a CUDA build
-# of torch first (see https://pytorch.org/get-started/locally/) before
-# installing the rest of this file.
+# CPU-only install shown below. For GPU acceleration (NVIDIA), install a
+# CUDA build of torch FIRST, before installing the rest of this file, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu130
+# Pick the CUDA tag matching your driver (see https://pytorch.org/get-started/locally/).
+# app.py auto-detects CUDA at startup — no code change needed either way.
 
 torch
 git+https://github.com/huggingface/parler-tts.git
