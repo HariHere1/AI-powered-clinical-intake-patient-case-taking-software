@@ -1,0 +1,13 @@
+nodeLinker: hoisted
+storeDir: D:\.pnpm-store
+allowBuilds:
+  '@parcel/watcher': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@swc/core': true
+  esbuild: true
+  msgpackr-extract: false
+  prisma: true
+  sharp: false
+  unrs-resolver: false
+  workerd: false

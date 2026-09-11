@@ -1,0 +1,308 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StaffRole {
+  DOCTOR
+  ADMIN
+}
+
+enum InputType {
+  VOICE_TEXT
+  CHOICE
+  SCALE
+}
+
+enum FollowUpStrategy {
+  NONE
+  LLM_ADAPTIVE
+  SOCRATES
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum DocType {
+  PRESCRIPTION
+  PHARMACY_BILL
+  CONSULTATION_RECORD
+  LAB_REPORT
+  OTHER
+}
+
+enum OcrStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+enum ReportStatus {
+  DRAFT
+  PHYSICIAN_REVIEWED
+  FINALIZED
+}
+
+enum ActorType {
+  PATIENT
+  DOCTOR
+  ADMIN
+  SYSTEM
+}
+
+model Hospital {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff           StaffUser[]
+  surveyTemplates SurveyTemplate[]
+  intakeSessions  IntakeSession[]
+}
+
+model StaffUser {
+  id           String    @id @default(uuid())
+  hospitalId   String
+  hospital     Hospital  @relation(fields: [hospitalId], references: [id])
+  role         StaffRole
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  createdTemplates SurveyTemplate[] @relation("TemplateCreator")
+  editedVersions   ReportVersion[]  @relation("ReportEditor")
+  accessKeys       AccessKey[]      @relation("DoctorKeys")
+
+  @@index([hospitalId])
+}
+
+model Patient {
+  id                String   @id @default(uuid())
+  phone             String   @unique
+  fullName          String
+  preferredLanguage String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  consentRecords ConsentRecord[]
+  intakeSessions IntakeSession[]
+  documents      Document[]
+  reports        Report[]
+  accessKeys     AccessKey[]
+
+  @@index([phone])
+}
+
+model OtpCode {
+  id           String    @id @default(uuid())
+  patientPhone String
+  codeHash     String
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([patientPhone])
+}
+
+model SurveyTemplate {
+  id               String     @id @default(uuid())
+  hospitalId       String
+  hospital         Hospital   @relation(fields: [hospitalId], references: [id])
+  name             String
+  version          Int        @default(1)
+  isActive         Boolean    @default(false)
+  createdByStaffId String?
+  createdByStaff   StaffUser? @relation("TemplateCreator", fields: [createdByStaffId], references: [id])
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  questions      SurveyQuestion[]
+  intakeSessions IntakeSession[]
+
+  @@index([hospitalId, isActive])
+}
+
+model SurveyQuestion {
+  id               String           @id @default(uuid())
+  templateId       String
+  template         SurveyTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  orderIndex       Int
+  code             String
+  promptText       String
+  inputType        InputType        @default(VOICE_TEXT)
+  isRequired       Boolean          @default(true)
+  followUpStrategy FollowUpStrategy @default(NONE)
+  metadata         Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  translations      QuestionTranslation[]
+  conversationTurns ConversationTurn[]
+
+  @@unique([templateId, orderIndex])
+  @@index([templateId])
+}
+
+model QuestionTranslation {
+  id           String         @id @default(uuid())
+  questionId   String
+  question     SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  languageCode String
+  text         String
+
+  @@unique([questionId, languageCode])
+}
+
+model ConsentRecord {
+  id             String         @id @default(uuid())
+  patientId      String
+  patient        Patient        @relation(fields: [patientId], references: [id])
+  sessionId      String?        @unique
+  session        IntakeSession? @relation(fields: [sessionId], references: [id])
+  consentText    String
+  consentVersion String
+  grantedAt      DateTime       @default(now())
+  revokedAt      DateTime?
+  ipAddress      String?
+
+  @@index([patientId])
+}
+
+model IntakeSession {
+  id               String         @id @default(uuid())
+  patientId        String
+  patient          Patient        @relation(fields: [patientId], references: [id])
+  hospitalId       String
+  hospital         Hospital       @relation(fields: [hospitalId], references: [id])
+  surveyTemplateId String
+  surveyTemplate   SurveyTemplate @relation(fields: [surveyTemplateId], references: [id])
+  languageCode     String
+  status           SessionStatus  @default(IN_PROGRESS)
+  startedAt        DateTime       @default(now())
+  completedAt      DateTime?
+
+  consentRecord     ConsentRecord?
+  conversationTurns ConversationTurn[]
+  documents         Document[]
+  report            Report?
+
+  @@index([patientId])
+  @@index([hospitalId])
+}
+
+model ConversationTurn {
+  id                String             @id @default(uuid())
+  sessionId         String
+  session           IntakeSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sequenceNo        Int
+  questionId        String?
+  question          SurveyQuestion?    @relation(fields: [questionId], references: [id])
+  questionTextShown String
+  questionAudioUrl  String?
+  answerText        String?
+  answerAudioUrl    String?
+  isFollowUp        Boolean            @default(false)
+  parentTurnId      String?
+  parentTurn        ConversationTurn?  @relation("TurnFollowUps", fields: [parentTurnId], references: [id])
+  followUps         ConversationTurn[] @relation("TurnFollowUps")
+  redFlag           Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+
+  @@unique([sessionId, sequenceNo])
+  @@index([sessionId])
+}
+
+model Document {
+  id          String        @id @default(uuid())
+  sessionId   String
+  session     IntakeSession @relation(fields: [sessionId], references: [id])
+  patientId   String
+  patient     Patient       @relation(fields: [patientId], references: [id])
+  docType     DocType
+  storagePath String
+  ocrStatus   OcrStatus     @default(PENDING)
+  ocrText     Json?
+  uploadedAt  DateTime      @default(now())
+  processedAt DateTime?
+
+  @@index([sessionId])
+  @@index([patientId])
+}
+
+model Report {
+  id             String        @id @default(uuid())
+  sessionId      String        @unique
+  session        IntakeSession @relation(fields: [sessionId], references: [id])
+  patientId      String
+  patient        Patient       @relation(fields: [patientId], references: [id])
+  currentVersion Int           @default(1)
+  status         ReportStatus  @default(DRAFT)
+  generatedAt    DateTime      @default(now())
+
+  versions   ReportVersion[]
+  accessKeys AccessKey[]
+
+  @@index([patientId])
+}
+
+model ReportVersion {
+  id              String     @id @default(uuid())
+  reportId        String
+  report          Report     @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  versionNo       Int
+  content         Json
+  editedByStaffId String?
+  editedByStaff   StaffUser? @relation("ReportEditor", fields: [editedByStaffId], references: [id])
+  editedAt        DateTime   @default(now())
+  changeNote      String?
+
+  @@unique([reportId, versionNo])
+  @@index([reportId])
+}
+
+model AccessKey {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  reportId      String
+  report        Report    @relation(fields: [reportId], references: [id])
+  patientId     String
+  patient       Patient   @relation(fields: [patientId], references: [id])
+  doctorId      String
+  doctor        StaffUser @relation("DoctorKeys", fields: [doctorId], references: [id])
+  isActive      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  activatedAt   DateTime?
+  deactivatedAt DateTime?
+
+  @@index([doctorId, isActive])
+  @@index([patientId])
+}
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  actorType  ActorType
+  actorId    String?
+  eventType  String
+  entityType String
+  entityId   String
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}

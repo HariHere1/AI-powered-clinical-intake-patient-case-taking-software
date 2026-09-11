@@ -1,0 +1,99 @@
+{
+  "common": {
+    "appName": "MediKiosk",
+    "continue": "Continue",
+    "back": "Back",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "save": "Save",
+    "error": "Something went wrong. Please try again."
+  },
+  "patientEntry": {
+    "title": "Welcome to MediKiosk",
+    "subtitle": "Enter your details to begin",
+    "phoneLabel": "Phone number",
+    "nameLabel": "Full name",
+    "requestOtp": "Send verification code",
+    "otpLabel": "Enter the code sent to your phone",
+    "verifyOtp": "Verify and continue",
+    "mockOtpNotice": "Demo mode: your code is shown below instead of being sent by SMS."
+  },
+  "language": {
+    "title": "Choose your language",
+    "subtitle": "You can change this anytime"
+  },
+  "consent": {
+    "title": "Your consent matters",
+    "body": "MediKiosk will record your medical history, including anything you say or type, and any documents you upload. This information is shared only with the hospital and doctors you choose. You can withdraw consent at any time.",
+    "agree": "I understand and agree",
+    "decline": "I do not agree"
+  },
+  "intake": {
+    "title": "Let's talk about how you're feeling",
+    "listening": "Listening...",
+    "speakOrType": "Speak your answer, or type it below",
+    "playQuestion": "Play question",
+    "nextQuestion": "Next",
+    "finish": "Finish interview",
+    "redFlagNotice": "This may need urgent attention. A staff member has been alerted."
+  },
+  "documents": {
+    "title": "Upload your medical documents",
+    "subtitle": "Prescriptions, pharmacy bills, lab reports, or past consultation records",
+    "upload": "Upload document",
+    "type": "Document type",
+    "types": {
+      "PRESCRIPTION": "Prescription",
+      "PHARMACY_BILL": "Pharmacy bill",
+      "CONSULTATION_RECORD": "Consultation record",
+      "LAB_REPORT": "Lab report",
+      "OTHER": "Other"
+    },
+    "processing": "Reading document...",
+    "done": "Processed",
+    "failed": "Could not read this document",
+    "skip": "Skip for now"
+  },
+  "report": {
+    "title": "Your clinical history summary",
+    "chiefComplaint": "Chief complaint",
+    "hpi": "History of present illness",
+    "pastMedical": "Past medical & surgical history",
+    "drugAllergy": "Drug & allergy history",
+    "family": "Family history",
+    "personal": "Personal history",
+    "ros": "Review of systems",
+    "priorInvestigations": "Prior investigations",
+    "shareWithDoctor": "Share with a doctor",
+    "generateKey": "Generate access key",
+    "keyLabel": "Access key",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "doctor": {
+    "loginTitle": "Doctor login",
+    "email": "Email",
+    "password": "Password",
+    "login": "Log in",
+    "dashboardTitle": "Patients who have shared access with you",
+    "noPatients": "No patients have an active access key for you right now.",
+    "viewReport": "View report",
+    "editReport": "Edit report",
+    "saveChanges": "Save changes",
+    "versionHistory": "Version history"
+  },
+  "admin": {
+    "loginTitle": "Hospital admin login",
+    "surveyTitle": "Survey template",
+    "addQuestion": "Add question",
+    "questionText": "Question text",
+    "questionCode": "Question code",
+    "inputType": "Input type",
+    "followUpStrategy": "Follow-up strategy",
+    "required": "Required",
+    "saveTemplate": "Save template"
+  }
+}

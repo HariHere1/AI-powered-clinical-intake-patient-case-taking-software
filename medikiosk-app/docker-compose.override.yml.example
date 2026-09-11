@@ -1,0 +1,36 @@
+# Copy this file to docker-compose.override.yml and adjust for your machine.
+# Docker Compose automatically merges docker-compose.override.yml on top of
+# docker-compose.yml, so nothing else needs to change.
+#
+# ---------------------------------------------------------------------------
+# Option A: GPU passthrough for the TTS service (recommended if you have an
+# NVIDIA GPU). Requires:
+#   - NVIDIA drivers on the host
+#   - NVIDIA Container Toolkit installed
+#   - On Windows: WSL2 with GPU support enabled (Docker Desktop's WSL2 backend
+#     passes the GPU through automatically once the toolkit is installed
+#     inside the WSL2 distro Docker Desktop uses)
+# ---------------------------------------------------------------------------
+services:
+  tts:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+# ---------------------------------------------------------------------------
+# Option B: skip Dockerized TTS entirely and run it natively on the host with
+# CUDA/PyTorch installed directly (often faster to iterate on than rebuilding
+# a GPU image). Comment out the "tts" block above and instead:
+#   1. cd python-services/tts && pip install -r requirements.txt
+#   2. python app.py   (listens on :8002 by default)
+#   3. Keep TTS_SERVICE_URL=http://localhost:8002 in .env -- the Next.js app
+#      talks to the same REST contract either way, so no app code changes.
+#
+# To fully remove the "tts" service from `docker compose up`, delete it from
+# docker-compose.yml locally or run:
+#   docker compose up -d postgres stt ocr
+# ---------------------------------------------------------------------------
