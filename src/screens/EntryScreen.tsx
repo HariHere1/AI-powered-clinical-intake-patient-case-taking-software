@@ -469,7 +469,7 @@ function PatientPanel({ onCheckedIn }: { onCheckedIn: () => void }) {
 // ─── Staff login panel ───────────────────────────────────────────────────────
 
 export function StaffPanel({ dedicated = false }: { dedicated?: boolean }) {
-  const { navigateTo } = useApp();
+  const { navigateTo, loginDoctor } = useApp();
   const [open, setOpen] = useState(dedicated);
   const [staffId, setStaffId] = useState("");
   const [password, setPassword] = useState("");
@@ -481,11 +481,13 @@ export function StaffPanel({ dedicated = false }: { dedicated?: boolean }) {
     if (!staffId || !password) { setError("Please fill in both fields."); return; }
     setError("");
     setLoading(true);
+    // FR-DOC-01 MVP: accept any non-empty credentials as doctor.
+    // Swap for Supabase Auth (`/api/doctor/*`) in production.
     setTimeout(() => {
       setLoading(false);
-      // In production: real auth. For demo, any input proceeds.
-      setError("Invalid credentials. Please try again or contact admin.");
-    }, 1200);
+      loginDoctor(staffId.trim());
+      navigateTo("doctor-queue");
+    }, 600);
   }
 
   if (!open && !dedicated) {
