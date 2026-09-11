@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { useTTS } from "../hooks/useTTS";
+import ScreenBackButton from "../components/ScreenBackButton";
 
 const SECTIONS = [
   { id: "complaint", label: "Chief Complaint", shortLabel: "Complaint", color: "var(--mk-primary)" },
@@ -154,6 +155,9 @@ export default function ConverseScreen() {
       className="flex flex-col flex-1 overflow-hidden screen-enter mk-transition"
       style={{ backgroundColor: "var(--mk-bg)", color: "var(--mk-fg)" }}
     >
+      <div className="px-6 pt-4 shrink-0">
+        <ScreenBackButton to="consent" label="Back to consent" />
+      </div>
       {/* Progress bar: section segments */}
       <div className="flex gap-1.5 px-6 pt-4 shrink-0">
         {SECTIONS.map((s, i) => {

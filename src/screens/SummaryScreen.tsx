@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { useTTS } from "../hooks/useTTS";
 import { getPatientConfirmation } from "../utils/patientConfirmations";
+import ScreenBackButton from "../components/ScreenBackButton";
 
 const MOCK_SUMMARY = {
   patient: {
@@ -123,6 +124,9 @@ export default function SummaryScreen() {
         className="flex flex-col flex-1 items-center justify-center gap-8 px-6 screen-enter mk-transition"
         style={{ backgroundColor: "var(--mk-bg)", color: "var(--mk-fg)" }}
       >
+        <div className="self-start">
+          <ScreenBackButton to="scan" label="Back to documents" />
+        </div>
         <div
           className="flex items-center justify-center rounded-full"
           style={{ width: 100, height: 100, backgroundColor: "var(--mk-success-bg)", border: "3px solid var(--mk-success)" }}
@@ -220,6 +224,9 @@ export default function SummaryScreen() {
         className="px-6 py-4 shrink-0"
         style={{ borderBottom: "1.5px solid var(--mk-border)", backgroundColor: "var(--mk-card)" }}
       >
+        <div style={{ marginBottom: 16 }}>
+          <ScreenBackButton to="scan" label="Back to documents" />
+        </div>
         <div className="flex items-start justify-between gap-4">
           <div>
             <div

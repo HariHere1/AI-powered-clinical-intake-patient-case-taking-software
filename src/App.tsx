@@ -3,6 +3,7 @@ import { AppProvider, useApp } from "./context/AppContext";
 import type { Screen } from "./context/AppContext";
 import AccessibilityBar from "./components/AccessibilityBar";
 import EntryScreen from "./screens/EntryScreen";
+import StaffLoginScreen from "./screens/StaffLoginScreen";
 import LanguageSelect from "./screens/LanguageSelect";
 import ConsentScreen from "./screens/ConsentScreen";
 import ConverseScreen from "./screens/ConverseScreen";
@@ -19,6 +20,7 @@ const workflowSteps: { screen: Exclude<Screen, "entry">; label: string }[] = [
 
 const screenContent: Record<Screen, ReactNode> = {
   entry: <EntryScreen />,
+  staff: <StaffLoginScreen />,
   language: <LanguageSelect />,
   consent: <ConsentScreen />,
   converse: <ConverseScreen />,
@@ -101,7 +103,7 @@ function KioskShell() {
     >
       <AccessibilityBar />
 
-      {screen !== "entry" && <StepIndicator currentScreen={screen} />}
+      {screen !== "entry" && screen !== "staff" && <StepIndicator currentScreen={screen} />}
 
       {/* Screen content */}
       <div className="flex flex-col flex-1 overflow-hidden">
