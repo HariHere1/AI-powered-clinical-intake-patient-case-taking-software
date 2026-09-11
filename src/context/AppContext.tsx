@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { makeT, type TranslateFn } from "../i18n/translations";
 
 export type Screen = "entry" | "staff" | "language" | "consent" | "converse" | "scan" | "summary";
 
@@ -18,6 +19,8 @@ export interface ClinicalData {
 
 interface AppContextValue {
   screen: Screen;
+  /** Translation function bound to the patient's selected language. */
+  t: TranslateFn;
   navigateTo: (s: Screen) => void;
   hcMode: boolean;
   toggleHc: () => void;
@@ -42,6 +45,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     emergencyFlag: false,
     consentGiven: false,
   });
+
+  const t = makeT(data.language?.code);
 
   function navigateTo(s: Screen) {
     setScreen(s);
@@ -78,6 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         screen,
+        t,
         navigateTo,
         hcMode,
         toggleHc,

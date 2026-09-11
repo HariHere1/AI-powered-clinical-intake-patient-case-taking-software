@@ -10,12 +10,12 @@ import ConverseScreen from "./screens/ConverseScreen";
 import DocumentScan from "./screens/DocumentScan";
 import SummaryScreen from "./screens/SummaryScreen";
 
-const workflowSteps: { screen: Exclude<Screen, "entry">; label: string }[] = [
-  { screen: "language", label: "Language" },
-  { screen: "consent", label: "Consent" },
-  { screen: "converse", label: "Interview" },
-  { screen: "scan", label: "Documents" },
-  { screen: "summary", label: "Review & Submit" },
+const workflowSteps: { screen: Exclude<Screen, "entry">; label: string; labelKey: string }[] = [
+  { screen: "language", label: "Language", labelKey: "language" },
+  { screen: "consent", label: "Consent", labelKey: "consent" },
+  { screen: "converse", label: "Interview", labelKey: "interview" },
+  { screen: "scan", label: "Documents", labelKey: "documents" },
+  { screen: "summary", label: "Review & Submit", labelKey: "review" },
 ];
 
 const screenContent: Record<Screen, ReactNode> = {
@@ -29,6 +29,7 @@ const screenContent: Record<Screen, ReactNode> = {
 };
 
 function StepIndicator({ currentScreen }: { currentScreen: Exclude<Screen, "entry"> }) {
+  const { t } = useApp();
   const currentIndex = workflowSteps.findIndex(({ screen }) => screen === currentScreen);
 
   return (
@@ -75,7 +76,7 @@ function StepIndicator({ currentScreen }: { currentScreen: Exclude<Screen, "entr
           letterSpacing: "0.02em",
         }}
       >
-        {workflowSteps[currentIndex].label}
+        {t(`step.${workflowSteps[currentIndex].labelKey}`)}
       </span>
     </div>
   );

@@ -2,9 +2,9 @@ import { useApp } from "../context/AppContext";
 import { useTTS } from "../hooks/useTTS";
 import ScreenBackButton from "../components/ScreenBackButton";
 
+// Consent point texts are i18n keys, resolved per selected language below.
 const CONSENT_POINTS = [
-  {
-    icon: (
+  { key: "point1", icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
@@ -13,10 +13,9 @@ const CONSENT_POINTS = [
         <polyline points="10 9 9 9 8 9" />
       </svg>
     ),
-    title: "We will record your health history",
-    body: "Your answers will be stored as a digital health record for this visit.",
   },
   {
+    key: "point2",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -25,20 +24,18 @@ const CONSENT_POINTS = [
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
-    title: "Shared only with your doctor",
-    body: "Your information is shared with the treating doctor and hospital staff only. It is not sold or shared with any outside company.",
   },
   {
+    key: "point3",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
       </svg>
     ),
-    title: "Your data is kept secure",
-    body: "All information is protected. Only authorised hospital staff can view your record.",
   },
   {
+    key: "point4",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -46,19 +43,21 @@ const CONSENT_POINTS = [
         <line x1="9" y1="9" x2="15" y2="15" />
       </svg>
     ),
-    title: "You can decline",
-    body: "If you decline, a staff member will fill in your history on paper instead. Your care will not be affected.",
   },
 ];
 
-const CONSENT_SPEECH_TEXT = CONSENT_POINTS.map((p) => `${p.title}. ${p.body}`).join(" ");
-
 export default function ConsentScreen() {
-  const { navigateTo, setConsent, data } = useApp();
+  const { navigateTo, setConsent, data, t } = useApp();
   const { speak, stop, isSpeaking } = useTTS();
 
   const lang = data.language;
   const audioPlaying = isSpeaking;
+
+  // Speech text assembled from the translated consent points so the
+  // "Listen" audio plays in the patient's language.
+  const consentSpeechText = CONSENT_POINTS.map(
+    (p) => `${t(`consent.${p.key}.title`)}. ${t(`consent.${p.key}.body`)}`,
+  ).join(" ");
 
   function handleAccept() {
     stop();
@@ -76,7 +75,7 @@ export default function ConsentScreen() {
     if (isSpeaking) {
       stop();
     } else {
-      speak(CONSENT_SPEECH_TEXT);
+      speak(consentSpeechText);
     }
   }
 
@@ -90,7 +89,7 @@ export default function ConsentScreen() {
         style={{ maxWidth: 720 }}
       >
         <div style={{ marginBottom: 24 }}>
-          <ScreenBackButton to="language" label="Back to language" />
+          <ScreenBackButton to="language" label={t("back.language")} />
         </div>
         {/* Title row */}
         <div className="flex items-start justify-between gap-4 mb-6">
@@ -99,7 +98,7 @@ export default function ConsentScreen() {
               className="text-xs font-semibold uppercase tracking-widest mb-2"
               style={{ color: "var(--mk-muted)", fontFamily: "var(--font-display)" }}
             >
-              Before we begin
+              {t("consent.kicker")}
             </div>
             <h1
               className="font-bold"
@@ -110,7 +109,9 @@ export default function ConsentScreen() {
                 color: "var(--mk-fg)",
               }}
             >
-              How we use<br />your information
+              {t("consent.title1")}
+              <br />
+              {t("consent.title2")}
             </h1>
           </div>
 
@@ -141,7 +142,7 @@ export default function ConsentScreen() {
               </svg>
             )}
             <span style={{ fontSize: "0.65rem", fontFamily: "var(--font-display)", fontWeight: 600 }}>
-              {audioPlaying ? "Playing…" : "Listen"}
+              {audioPlaying ? t("consent.playing") : t("consent.listen")}
             </span>
           </button>
         </div>
@@ -194,7 +195,7 @@ export default function ConsentScreen() {
                     color: "var(--mk-fg)",
                   }}
                 >
-                  {point.title}
+                  {t(`consent.${point.key}.title`)}
                 </div>
                 <div
                   style={{
@@ -204,7 +205,7 @@ export default function ConsentScreen() {
                     lineHeight: 1.55,
                   }}
                 >
-                  {point.body}
+                  {t(`consent.${point.key}.body`)}
                 </div>
               </div>
             </div>
@@ -223,7 +224,7 @@ export default function ConsentScreen() {
               <line x1="12" y1="16" x2="12.01" y2="16" strokeWidth="3" strokeLinecap="round" />
             </svg>
             <span style={{ fontSize: "0.88rem", color: "var(--mk-fg-secondary)", fontFamily: "var(--font-body)" }}>
-              This session will continue in <strong>{lang.english}</strong>. Questions and options will be shown in your chosen language.
+              {t("consent.note", { lang: lang.english })}
             </span>
           </div>
         )}
@@ -253,7 +254,7 @@ export default function ConsentScreen() {
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
-            Decline
+            {t("consent.decline")}
           </button>
 
           <button
@@ -278,7 +279,7 @@ export default function ConsentScreen() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            I Agree — Continue
+            {t("consent.agree")}
           </button>
         </div>
       </div>

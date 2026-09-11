@@ -105,8 +105,27 @@ function buildSummarySpeechText(): string {
     .join(". ");
 }
 
+// Maps the (English) mock-data item labels to their i18n keys so the
+// patient-facing labels follow the selected language. Clinical values stay in
+// English — they are the physician-facing record.
+const ITEM_LABEL_KEY: Record<string, string> = {
+  "Primary complaint": "item.primaryComplaint",
+  "Location": "item.location",
+  "Severity": "item.severity",
+  "Duration": "item.duration",
+  "Known conditions": "item.conditions",
+  "Current medications": "item.medications",
+  "Previous hospitalisations": "item.hospitalisations",
+  "Family history": "item.familyHistory",
+  "Chest pain": "item.chestPain",
+  "Breathing difficulty": "item.breathing",
+  "Dizziness / fainting": "item.dizziness",
+  "Nausea / vomiting": "item.nausea",
+  "Document 1": "item.document1",
+};
+
 export default function SummaryScreen() {
-  const { data, navigateTo } = useApp();
+  const { data, navigateTo, t } = useApp();
   const { speak, stop, isSpeaking } = useTTS();
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -125,7 +144,7 @@ export default function SummaryScreen() {
         style={{ backgroundColor: "var(--mk-bg)", color: "var(--mk-fg)" }}
       >
         <div className="self-start">
-          <ScreenBackButton to="scan" label="Back to documents" />
+          <ScreenBackButton to="scan" label={t("back.documents")} />
         </div>
         <div
           className="flex items-center justify-center rounded-full"
@@ -141,16 +160,16 @@ export default function SummaryScreen() {
             className="font-bold mb-3"
             style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.6rem, 3vw, 2.2rem)", color: "var(--mk-fg)" }}
           >
-            History submitted
+            {t("summary.submittedTitle")}
           </h1>
           <p style={{ fontFamily: "var(--font-body)", fontSize: "1rem", color: "var(--mk-fg-secondary)", lineHeight: 1.6 }}>
-            Your health information has been sent to the doctor. Please go to the waiting area and you will be called when the doctor is ready.
+            {t("summary.submittedBody")}
           </p>
           <p
             className="mt-4"
             style={{ fontFamily: "var(--font-body)", fontSize: "0.88rem", color: "var(--mk-muted)" }}
           >
-            आपकी जानकारी डॉक्टर के पास भेज दी गई है। कृपया प्रतीक्षा कक्ष में जाएं।
+            {t("summary.submittedAlt")}
           </p>
 
           <button
@@ -172,7 +191,7 @@ export default function SummaryScreen() {
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
               <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
             </svg>
-            {isSpeaking ? "Playing…" : "Listen in your language"}
+            {isSpeaking ? t("summary.playing") : t("summary.listen")}
           </button>
         </div>
 
@@ -181,7 +200,7 @@ export default function SummaryScreen() {
           style={{ backgroundColor: "var(--mk-card)", border: "1.5px solid var(--mk-border)", maxWidth: 360, width: "100%" }}
         >
           <div style={{ fontSize: "0.72rem", color: "var(--mk-muted)", fontFamily: "var(--font-display)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600 }}>
-            Reference number
+            {t("summary.reference")}
           </div>
           <div
             className="font-bold mt-1"
@@ -208,7 +227,7 @@ export default function SummaryScreen() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          Start over for next patient
+          {t("summary.startOver")}
         </button>
       </div>
     );
@@ -225,14 +244,14 @@ export default function SummaryScreen() {
         style={{ borderBottom: "1.5px solid var(--mk-border)", backgroundColor: "var(--mk-card)" }}
       >
         <div style={{ marginBottom: 16 }}>
-          <ScreenBackButton to="scan" label="Back to documents" />
+          <ScreenBackButton to="scan" label={t("back.documents")} />
         </div>
         <div className="flex items-start justify-between gap-4">
           <div>
             <div
               style={{ fontSize: "0.68rem", color: "var(--mk-muted)", fontFamily: "var(--font-display)", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}
             >
-              Clinical History Summary · {MOCK_SUMMARY.patient.date}
+              {t("summary.kicker")} · {MOCK_SUMMARY.patient.date}
             </div>
             <h1
               className="font-bold"
@@ -241,7 +260,7 @@ export default function SummaryScreen() {
               {MOCK_SUMMARY.patient.name}
             </h1>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
-              {[MOCK_SUMMARY.patient.age, MOCK_SUMMARY.patient.sex, `MRN: ${MOCK_SUMMARY.patient.mrn}`].map((tag) => (
+              {[MOCK_SUMMARY.patient.age, MOCK_SUMMARY.patient.sex, `${t("summary.mrn")} ${MOCK_SUMMARY.patient.mrn}`].map((tag) => (
                 <span
                   key={tag}
                   className="rounded-full px-3 py-0.5"
@@ -293,7 +312,7 @@ export default function SummaryScreen() {
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
               </svg>
               <span style={{ fontSize: "0.72rem", color: "var(--mk-emergency)", fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                URGENT FLAGS
+                {t("summary.urgentFlags")}
               </span>
             </div>
           </div>
@@ -336,12 +355,14 @@ export default function SummaryScreen() {
                     className="font-semibold"
                     style={{ fontFamily: "var(--font-display)", fontSize: "0.95rem", color: "var(--mk-fg)" }}
                   >
-                    {sec.title}
+                    {sec.id === "documents" ? t("sum.section.documents") : t(`section.${sec.id}.label`)}
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "var(--mk-muted)", fontFamily: "var(--font-body)" }}>
-                    {sec.items.length} recorded {sec.items.length === 1 ? "item" : "items"}
+                    {sec.items.length === 1
+                      ? t("summary.itemsOne", { n: sec.items.length })
+                      : t("summary.itemsMany", { n: sec.items.length })}
                     {sec.emergency && (
-                      <span style={{ color: "var(--mk-emergency)", marginLeft: 8, fontWeight: 700 }}>· Urgent flag</span>
+                      <span style={{ color: "var(--mk-emergency)", marginLeft: 8, fontWeight: 700 }}>· {t("summary.urgentFlag")}</span>
                     )}
                   </div>
                 </div>
@@ -364,7 +385,7 @@ export default function SummaryScreen() {
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
-                      Edit
+                      {t("summary.edit")}
                     </button>
                   )}
                   <svg
@@ -396,7 +417,7 @@ export default function SummaryScreen() {
                           paddingTop: 2,
                         }}
                       >
-                        {item.label}
+                        {ITEM_LABEL_KEY[item.label] ? t(ITEM_LABEL_KEY[item.label]) : item.label}
                       </div>
                       {editingSection === sec.id ? (
                         <input
@@ -440,7 +461,7 @@ export default function SummaryScreen() {
                           border: "none",
                         }}
                       >
-                        Save changes
+                        {t("summary.save")}
                       </button>
                       <button
                         onClick={() => setEditingSection(null)}
@@ -454,7 +475,7 @@ export default function SummaryScreen() {
                           border: "1.5px solid var(--mk-border)",
                         }}
                       >
-                        Cancel
+                        {t("summary.cancel")}
                       </button>
                     </div>
                   )}
@@ -487,7 +508,7 @@ export default function SummaryScreen() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          Back
+          {t("summary.back")}
         </button>
 
         <button
@@ -508,7 +529,7 @@ export default function SummaryScreen() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          Confirm &amp; Submit to Doctor
+          {t("summary.submit")}
         </button>
       </div>
     </div>

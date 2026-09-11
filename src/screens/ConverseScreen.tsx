@@ -3,121 +3,87 @@ import { useApp } from "../context/AppContext";
 import { useTTS } from "../hooks/useTTS";
 import ScreenBackButton from "../components/ScreenBackButton";
 
-const SECTIONS = [
-  { id: "complaint", label: "Chief Complaint", shortLabel: "Complaint", color: "var(--mk-primary)" },
-  { id: "history",   label: "Medical History",  shortLabel: "History",   color: "#2E7D60" },
-  { id: "family",    label: "Family History",   shortLabel: "Family",    color: "#7B5EA7" },
-  { id: "review",    label: "Review of Systems", shortLabel: "Review",   color: "#B5601F" },
-];
-
-const QUESTIONS: Record<string, { q: string; options: string[]; emergency?: string[] }[]> = {
-  complaint: [
-    {
-      q: "What is the main reason for your visit today?",
-      options: ["Pain or discomfort", "Fever or infection", "Difficulty breathing", "Weakness / fatigue", "Routine follow-up", "Other"],
-      emergency: ["Difficulty breathing"],
-    },
-    {
-      q: "Where is the pain or discomfort? Please point or describe.",
-      options: ["Chest", "Abdomen / stomach", "Head", "Joints or muscles", "Back", "Other area"],
-      emergency: ["Chest"],
-    },
-    {
-      q: "How severe is it on a scale of 1 to 10?",
-      options: ["1–3  Mild", "4–6  Moderate", "7–8  Severe", "9–10  Very severe"],
-    },
-    {
-      q: "How long have you had this problem?",
-      options: ["Just started today", "2–3 days", "About a week", "2–4 weeks", "More than a month"],
-    },
-  ],
-  history: [
-    {
-      q: "Do you have any known medical conditions?",
-      options: ["Diabetes", "High blood pressure", "Heart disease", "Asthma / lung disease", "Kidney or liver disease", "None of these"],
-    },
-    {
-      q: "Are you currently taking any medicines or tablets?",
-      options: ["Yes, taking regularly", "Taking sometimes", "Stopped recently", "No medicines"],
-    },
-    {
-      q: "Have you been admitted to hospital before?",
-      options: ["Yes, recently (within 1 year)", "Yes, in the past", "Never", "Not sure"],
-    },
-  ],
-  family: [
-    {
-      q: "Do any close family members (parents, siblings) have a serious health condition?",
-      options: ["Heart disease", "Diabetes", "Cancer", "High blood pressure", "Kidney disease", "None / Not known"],
-    },
-  ],
-  review: [
-    {
-      q: "Are you experiencing any chest pain or pressure right now?",
-      options: ["Yes — it is happening now", "I had it earlier but not now", "No"],
-      emergency: ["Yes — it is happening now"],
-    },
-    {
-      q: "Any difficulty breathing or shortness of breath?",
-      options: ["Yes — right now", "Only on exertion", "No"],
-      emergency: ["Yes — right now"],
-    },
-    {
-      q: "Any recent dizziness, fainting, or loss of consciousness?",
-      options: ["Yes, I fainted recently", "I felt dizzy", "No"],
-      emergency: ["Yes, I fainted recently"],
-    },
-    {
-      q: "Any nausea, vomiting, or inability to eat in the past 24 hours?",
-      options: ["Yes, severe vomiting", "Mild nausea only", "No"],
-    },
-  ],
+// Sections and questions are stored as i18n keys — all patient-facing text is
+// resolved through t() so the whole interview follows the selected language.
+// Option counts per question, and which option indices are emergency flags.
+const QUESTION_COUNTS: Record<string, number[]> = {
+  complaint: [6, 6, 4, 5],
+  history: [6, 4, 4],
+  family: [6],
+  review: [3, 3, 3, 3],
 };
+
+const EMERGENCY_OPTS: Record<string, Record<number, number[]>> = {
+  complaint: {
+    0: [2], // Difficulty breathing
+    1: [0], // Chest
+  },
+  review: {
+    0: [0], // Happening now
+    1: [0], // Right now
+    2: [0], // Fainted recently
+  },
+};
+
+const SECTIONS = [
+  { id: "complaint", color: "var(--mk-primary)" },
+  { id: "history", color: "#2E7D60" },
+  { id: "family", color: "#7B5EA7" },
+  { id: "review", color: "#B5601F" },
+];
 
 type MicState = "idle" | "listening" | "processing";
 
 export default function ConverseScreen() {
-  const { navigateTo, addResponse, setEmergency, data } = useApp();
+  const { navigateTo, addResponse, setEmergency, t } = useApp();
   const { speak, stop, isSpeaking } = useTTS();
 
   const [sectionIdx, setSectionIdx] = useState(0);
   const [questionIdx, setQuestionIdx] = useState(0);
   const [micState, setMicState] = useState<MicState>("idle");
   const [transcript, setTranscript] = useState("");
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [showEmergency, setShowEmergency] = useState(false);
 
   const section = SECTIONS[sectionIdx];
-  const sectionQuestions = QUESTIONS[section.id];
-  const question = sectionQuestions[questionIdx];
-  const totalQ = Object.values(QUESTIONS).flat().length;
-  const answeredQ = SECTIONS.slice(0, sectionIdx).reduce((a, s) => a + QUESTIONS[s.id].length, 0) + questionIdx;
+  const sectionQuestions = QUESTION_COUNTS[section.id];
+  const questionCount = sectionQuestions[questionIdx];
+
+  // Resolved, translated text for the current question and its options.
+  const qKey = `q.${section.id}.${questionIdx}`;
+  const qText = t(qKey);
+  const options = Array.from({ length: questionCount }, (_, i) => ({
+    idx: i,
+    key: `opt.${section.id}.${questionIdx}.${i}`,
+    text: t(`opt.${section.id}.${questionIdx}.${i}`),
+  }));
+  const totalQ = Object.values(QUESTION_COUNTS).flat().reduce((a, b) => a + b, 0);
+  const answeredQ = SECTIONS.slice(0, sectionIdx).reduce((a, s) => a + QUESTION_COUNTS[s.id].length, 0) + questionIdx;
   const progress = totalQ > 0 ? answeredQ / totalQ : 0;
 
-  // Read each question aloud as it appears — kiosk users may be low-literacy
-  // or elderly and need zero-training audio guidance.
+  // Read each question aloud in the patient's language as it appears —
+  // kiosk users may be low-literacy or elderly and need zero-training
+  // audio guidance. Re-speaks when the language changes too.
   useEffect(() => {
-    speak(question.q);
+    speak(qText);
     return () => stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [section.id, questionIdx]);
+  }, [section.id, questionIdx, qText]);
 
-  function handleOptionSelect(opt: string) {
-    setSelectedOption(opt);
-    setTranscript(opt);
-    if (question.emergency?.includes(opt)) {
-      setShowEmergency(true);
-      setEmergency(true);
-    } else {
-      setShowEmergency(false);
-    }
+  function handleOptionSelect(i: number) {
+    setSelectedIdx(i);
+    setTranscript("");
+    const emergencyIdx = EMERGENCY_OPTS[section.id]?.[questionIdx];
+    setShowEmergency(!!emergencyIdx?.includes(i));
+    if (emergencyIdx?.includes(i)) setEmergency(true);
   }
 
   function handleConfirm() {
-    if (!selectedOption && !transcript) return;
-    const answer = selectedOption || transcript;
-    addResponse(section.id, question.q, answer);
-    setSelectedOption(null);
+    const answered = selectedIdx !== null || transcript;
+    if (!answered) return;
+    const answer = selectedIdx !== null ? options[selectedIdx].text : transcript;
+    addResponse(section.id, qText, answer);
+    setSelectedIdx(null);
     setTranscript("");
     setShowEmergency(false);
 
@@ -148,7 +114,7 @@ export default function ConverseScreen() {
     }
   }
 
-  const isAnswered = !!(selectedOption || transcript);
+  const isAnswered = selectedIdx !== null || !!transcript;
 
   return (
     <div
@@ -156,12 +122,12 @@ export default function ConverseScreen() {
       style={{ backgroundColor: "var(--mk-bg)", color: "var(--mk-fg)" }}
     >
       <div className="px-6 pt-4 shrink-0">
-        <ScreenBackButton to="consent" label="Back to consent" />
+        <ScreenBackButton to="consent" label={t("back.consent")} />
       </div>
       {/* Progress bar: section segments */}
       <div className="flex gap-1.5 px-6 pt-4 shrink-0">
         {SECTIONS.map((s, i) => {
-          const sectionQs = QUESTIONS[s.id].length;
+          const sectionQs = QUESTION_COUNTS[s.id].length;
           const isActive = i === sectionIdx;
           const isComplete = i < sectionIdx;
           const fillRatio = isComplete ? 1 : isActive ? (questionIdx / sectionQs) : 0;
@@ -192,7 +158,7 @@ export default function ConverseScreen() {
                   fontWeight: isActive ? 700 : 500,
                 }}
               >
-                {s.shortLabel}
+                {t(`section.${s.id}.short`)}
               </span>
             </div>
           );
@@ -209,10 +175,10 @@ export default function ConverseScreen() {
           style={{ width: 8, height: 8, backgroundColor: section.color }}
         />
         <span className="font-semibold" style={{ fontSize: "0.8rem", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          {section.label}
+          {t(`section.${section.id}.label`)}
         </span>
         <span style={{ color: "var(--mk-muted)", fontSize: "0.75rem", fontWeight: 400 }}>
-          · {questionIdx + 1} of {sectionQuestions.length}
+          · {t("converse.qof", { i: questionIdx + 1, n: sectionQuestions.length })}
         </span>
       </div>
 
@@ -243,16 +209,10 @@ export default function ConverseScreen() {
                 className="font-bold mb-1"
                 style={{ color: "var(--mk-emergency)", fontFamily: "var(--font-display)", fontSize: "1.05rem" }}
               >
-                Please inform staff immediately
+                {t("converse.emergencyTitle")}
               </div>
               <div style={{ color: "var(--mk-fg)", fontFamily: "var(--font-body)", fontSize: "0.92rem", lineHeight: 1.5 }}>
-                You described a symptom that may need urgent attention. Please tell the reception desk or nursing staff right now. You can continue filling in your history as you wait.
-              </div>
-              <div
-                className="mt-2 font-medium"
-                style={{ color: "var(--mk-muted)", fontSize: "0.82rem", fontFamily: "var(--font-body)" }}
-              >
-                कृपया तुरंत कर्मचारियों को सूचित करें · உடனடியாக ஊழியர்களை தெரிவிக்கவும்
+                {t("converse.emergencyBody")}
               </div>
             </div>
           </div>
@@ -276,10 +236,10 @@ export default function ConverseScreen() {
                 lineHeight: 1.3,
               }}
             >
-              {question.q}
+              {qText}
             </h2>
             <button
-              onClick={() => (isSpeaking ? stop() : speak(question.q))}
+              onClick={() => (isSpeaking ? stop() : speak(qText))}
               aria-label={isSpeaking ? "Stop reading question" : "Read question aloud"}
               className="flex items-center justify-center rounded-full shrink-0 mk-transition"
               style={{
@@ -308,12 +268,12 @@ export default function ConverseScreen() {
 
           {/* Touch options */}
           <div className="flex flex-col gap-2.5">
-            {question.options.map((opt) => {
-              const isSelected = selectedOption === opt;
+            {options.map((opt) => {
+              const isSelected = selectedIdx === opt.idx;
               return (
                 <button
-                  key={opt}
-                  onClick={() => handleOptionSelect(opt)}
+                  key={opt.idx}
+                  onClick={() => handleOptionSelect(opt.idx)}
                   className="flex items-center gap-3 rounded-xl text-left mk-transition"
                   style={{
                     minHeight: 60,
@@ -343,7 +303,7 @@ export default function ConverseScreen() {
                       </svg>
                     )}
                   </div>
-                  {opt}
+                  {opt.text}
                 </button>
               );
             })}
@@ -358,7 +318,7 @@ export default function ConverseScreen() {
           <div className="flex items-center gap-2">
             <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--mk-muted)" }} />
             <span style={{ fontSize: "0.72rem", fontFamily: "var(--font-display)", color: "var(--mk-muted)", letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 600 }}>
-              Or speak your answer
+              {t("converse.speakAnswer")}
             </span>
           </div>
 
@@ -422,20 +382,20 @@ export default function ConverseScreen() {
                     className="ml-2"
                     style={{ color: "var(--mk-primary)", fontFamily: "var(--font-display)", fontSize: "0.85rem", fontWeight: 600 }}
                   >
-                    Listening…
+                    {t("converse.listening")}
                   </span>
                 </div>
               )}
 
               {micState === "processing" && (
                 <div style={{ color: "var(--mk-accent)", fontFamily: "var(--font-display)", fontSize: "0.85rem", fontWeight: 600 }}>
-                  Understanding your response…
+                  {t("converse.processing")}
                 </div>
               )}
 
               {micState === "idle" && !transcript && (
                 <div style={{ color: "var(--mk-muted)", fontFamily: "var(--font-body)", fontSize: "0.9rem" }}>
-                  Tap the microphone and speak clearly in your language.
+                  {t("converse.micPrompt")}
                 </div>
               )}
 
@@ -446,7 +406,7 @@ export default function ConverseScreen() {
                   style={{ backgroundColor: "var(--mk-sand)", border: "1.5px solid var(--mk-border)" }}
                 >
                   <div style={{ fontSize: "0.68rem", color: "var(--mk-muted)", fontFamily: "var(--font-display)", fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 4 }}>
-                    I heard:
+                    {t("converse.iHeard")}
                   </div>
                   <div style={{ color: "var(--mk-fg)", fontFamily: "var(--font-body)", fontSize: "0.95rem", fontStyle: "italic" }}>
                     "{transcript}"
@@ -476,7 +436,7 @@ export default function ConverseScreen() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          Confirm &amp; Continue
+          {t("converse.confirm")}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
