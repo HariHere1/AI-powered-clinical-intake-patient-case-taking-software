@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
+import { useTTS } from "../hooks/useTTS";
+import { getPatientConfirmation } from "../utils/patientConfirmations";
+import ScreenBackButton from "../components/ScreenBackButton";
 
 const MOCK_SUMMARY = {
   patient: {
@@ -96,22 +99,34 @@ const MOCK_SUMMARY = {
   ],
 };
 
+function buildSummarySpeechText(): string {
+  return MOCK_SUMMARY.sections
+    .map((sec) => `${sec.title}. ${sec.items.map((i) => `${i.label}: ${i.value.replace(/^⚠ /, "")}`).join(". ")}`)
+    .join(". ");
+}
+
 export default function SummaryScreen() {
   const { data, navigateTo } = useApp();
+  const { speak, stop, isSpeaking } = useTTS();
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string>("complaint");
 
   function handleSubmit() {
+    stop();
     setSubmitted(true);
   }
 
   if (submitted) {
+    const confirmationText = getPatientConfirmation(data.language?.code);
     return (
       <div
         className="flex flex-col flex-1 items-center justify-center gap-8 px-6 screen-enter mk-transition"
         style={{ backgroundColor: "var(--mk-bg)", color: "var(--mk-fg)" }}
       >
+        <div className="self-start">
+          <ScreenBackButton to="scan" label="Back to documents" />
+        </div>
         <div
           className="flex items-center justify-center rounded-full"
           style={{ width: 100, height: 100, backgroundColor: "var(--mk-success-bg)", border: "3px solid var(--mk-success)" }}
@@ -137,6 +152,28 @@ export default function SummaryScreen() {
           >
             आपकी जानकारी डॉक्टर के पास भेज दी गई है। कृपया प्रतीक्षा कक्ष में जाएं।
           </p>
+
+          <button
+            onClick={() => (isSpeaking ? stop() : speak(confirmationText))}
+            className="mt-5 flex items-center gap-2 rounded-2xl font-semibold mk-transition mx-auto"
+            style={{
+              minHeight: 52,
+              padding: "0 24px",
+              backgroundColor: isSpeaking ? "var(--mk-primary)" : "var(--mk-sand)",
+              color: isSpeaking ? "var(--mk-primary-fg)" : "var(--mk-fg)",
+              fontFamily: "var(--font-display)",
+              fontSize: "0.92rem",
+              cursor: "pointer",
+              border: "2px solid var(--mk-border)",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+            </svg>
+            {isSpeaking ? "Playing…" : "Listen in your language"}
+          </button>
         </div>
 
         <div
@@ -187,6 +224,9 @@ export default function SummaryScreen() {
         className="px-6 py-4 shrink-0"
         style={{ borderBottom: "1.5px solid var(--mk-border)", backgroundColor: "var(--mk-card)" }}
       >
+        <div style={{ marginBottom: 16 }}>
+          <ScreenBackButton to="scan" label="Back to documents" />
+        </div>
         <div className="flex items-start justify-between gap-4">
           <div>
             <div
@@ -218,16 +258,44 @@ export default function SummaryScreen() {
               ))}
             </div>
           </div>
-          <div
-            className="flex items-center gap-1.5 rounded-xl px-3 py-2 shrink-0"
-            style={{ backgroundColor: "var(--mk-emergency-bg)", border: "1.5px solid var(--mk-emergency-border)" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--mk-emergency)" stroke="none">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            </svg>
-            <span style={{ fontSize: "0.72rem", color: "var(--mk-emergency)", fontFamily: "var(--font-display)", fontWeight: 700 }}>
-              URGENT FLAGS
-            </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => (isSpeaking ? stop() : speak(buildSummarySpeechText(), "en"))}
+              aria-label={isSpeaking ? "Stop reading summary" : "Listen to summary"}
+              className="flex items-center justify-center rounded-xl mk-transition"
+              style={{
+                width: 40,
+                height: 40,
+                backgroundColor: isSpeaking ? "var(--mk-primary)" : "var(--mk-sand)",
+                color: isSpeaking ? "var(--mk-primary-fg)" : "var(--mk-primary)",
+                border: "1.5px solid var(--mk-border)",
+                cursor: "pointer",
+              }}
+            >
+              {isSpeaking ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                </svg>
+              )}
+            </button>
+            <div
+              className="flex items-center gap-1.5 rounded-xl px-3 py-2 shrink-0"
+              style={{ backgroundColor: "var(--mk-emergency-bg)", border: "1.5px solid var(--mk-emergency-border)" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--mk-emergency)" stroke="none">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              </svg>
+              <span style={{ fontSize: "0.72rem", color: "var(--mk-emergency)", fontFamily: "var(--font-display)", fontWeight: 700 }}>
+                URGENT FLAGS
+              </span>
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
+import ScreenBackButton from "../components/ScreenBackButton";
 
 type ScanState = "idle" | "scanning" | "captured";
 
@@ -52,6 +53,7 @@ export default function DocumentScan() {
       style={{ backgroundColor: "var(--mk-bg)", color: "var(--mk-fg)" }}
     >
       <div className="flex flex-col mx-auto w-full px-6 py-6" style={{ maxWidth: 720, gap: "1.25rem" }}>
+        <ScreenBackButton to="converse" label="Back to interview" />
         {/* Header */}
         <div>
           <div

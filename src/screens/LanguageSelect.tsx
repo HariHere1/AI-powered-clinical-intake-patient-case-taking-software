@@ -1,4 +1,5 @@
 import { useApp, Language } from "../context/AppContext";
+import ScreenBackButton from "../components/ScreenBackButton";
 
 const LANGUAGES: Language[] = [
   { code: "en", native: "English", english: "English", script: "Latin" },
@@ -47,6 +48,9 @@ export default function LanguageSelect() {
         className="w-full flex flex-col items-center py-10 px-6"
         style={{ borderBottom: "1.5px solid var(--mk-border)" }}
       >
+        <div className="w-full" style={{ maxWidth: 960, marginBottom: 24 }}>
+          <ScreenBackButton to="entry" label="Back to check-in" />
+        </div>
         <div
           className="rounded-full flex items-center justify-center mb-4"
           style={{ width: 72, height: 72, backgroundColor: "var(--mk-sand)" }}

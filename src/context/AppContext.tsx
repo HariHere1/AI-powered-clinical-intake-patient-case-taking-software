@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export type Screen = "entry" | "language" | "consent" | "converse" | "scan" | "summary";
+export type Screen = "entry" | "staff" | "language" | "consent" | "converse" | "scan" | "summary";
 
 export interface Language {
   code: string;
