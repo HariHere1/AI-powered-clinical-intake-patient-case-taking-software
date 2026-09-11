@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "server": "node server/index.js",
-    "dev:all": "concurrently -n web,api -c blue,green \"npm:dev\" \"npm:server\"",
+    "tts-service": "node scripts/run-tts-service.mjs",
+    "dev:all": "concurrently -n web,api,tts -c blue,green,magenta \"npm:dev\" \"npm:server\" \"npm:tts-service\"",
     "build": "vite build",
     "preview": "vite preview",
     "format": "oxfmt"

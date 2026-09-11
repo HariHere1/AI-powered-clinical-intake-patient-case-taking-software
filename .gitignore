@@ -20,3 +20,12 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+# Python TTS service (tts_service/) — venv and caches, not source
+tts_service/.venv/
+tts_service/**/__pycache__/
+tts_service/*.log
+*.pyc
+
+# Claude Code local tool state, not project source
+.claude/
